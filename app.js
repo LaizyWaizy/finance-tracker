@@ -514,14 +514,14 @@ class FinanceTracker {
                     level: 'critical',
                     icon: '❌',
                     category: category.charAt(0).toUpperCase() + category.slice(1),
-                    message: `${ category.charAt(0).toUpperCase() + category.slice(1) } budget exceeded - No discretionary spending recommended`
+                    message: (category.charAt(0).toUpperCase() + category.slice(1)) + ' budget exceeded - No discretionary spending recommended'
                 });
             } else if (status.percent >= 90) {
                 alerts.push({
                     level: 'warning',
                     icon: '⚠️',
                     category: category.charAt(0).toUpperCase() + category.slice(1),
-                    message: `${ category.charAt(0).toUpperCase() + category.slice(1) } budget at ${ Math.round(status.percent) }% - Consider cutting back`
+                    message: (category.charAt(0).toUpperCase() + category.slice(1)) + ' budget at ' + Math.round(status.percent) + '% - Consider cutting back'
                 });
             }
         });
@@ -532,7 +532,7 @@ class FinanceTracker {
                 level: 'critical',
                 icon: '🚨',
                 category: 'Bills',
-                message: `You need ${ this.formatCurrency(billsCoverage.shortfall) } more to cover upcoming bills`
+                message: 'You need ' + this.formatCurrency(billsCoverage.shortfall) + ' more to cover upcoming bills'
             });
         }
 
@@ -544,7 +544,7 @@ class FinanceTracker {
                 level: 'warning',
                 icon: '⚠️',
                 category: 'Spending',
-                message: `Daily spending ${ this.formatCurrency(overage) } over target - Runway shrinking faster than planned`
+                message: 'Daily spending ' + this.formatCurrency(overage) + ' over target - Runway shrinking faster than planned'
             });
         }
 
