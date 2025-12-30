@@ -848,12 +848,18 @@ class FinanceTracker {
 
         const prediction = this.predictWorkOutcome(hours, shiftType, dayOfWeek);
 
-                </div>
-            </div >
-    <div class="mt-4 p-3 bg-purple-50 rounded-lg text-sm">
-        💡 Working ${hours} hours would put you at <strong>${this.formatCurrency(prediction.newBalance)}</strong> with <strong>${prediction.newRunway} days</strong> of runway.
-    </div>
-`;
+                    '<div>' +
+                    '<div class="text-sm text-gray-600">New Runway</div>' +
+                    '<div class="text-2xl font-bold ' + (prediction.newRunway >= this.settings.minRunway ? 'text-green-600' : 'text-red-600') + '">' + prediction.newRunway + ' days</div>' +
+                '</div>' +
+                '<div>' +
+                    '<div class="text-sm text-gray-600">Status</div>' +
+                    '<div class="text-2xl font-bold ' + prediction.statusColor + '">' + prediction.status + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="mt-4 p-3 bg-purple-50 rounded-lg text-sm">' +
+                '💡 Working ' + hours + ' hours would put you at <strong>' + this.formatCurrency(prediction.newBalance) + '</strong> with <strong>' + prediction.newRunway + ' days</strong> of runway.' +
+            '</div>';
     }
 
 // ============================================
@@ -1034,8 +1040,7 @@ renderBillsOverview() {
     }
 
     document.getElementById('bills-covered').textContent = billsCovered ? '✅ Covered' : '❌ Short';
-    document.getElementById('bills-covered').className =
-        `text - 2xl font - bold ${billsCovered ? 'text-green-600' : 'text-red-600'} `;
+    document.getElementById('bills-covered').className = 'text-2xl font-bold ' + (billsCovered ? 'text-green-600' : 'text-red-600');
 }
 
 renderBudgetOverview() {
@@ -1055,7 +1060,7 @@ renderBudgetOverview() {
         if (!billsCoverage.covered) {
             summaryStatus = 'critical';
             summaryIcon = '🚨';
-            summaryText = `Bills not covered — Need ${this.formatCurrency(billsCoverage.shortfall)} more.Fun spending locked.`;
+            summaryText = 'Bills not covered — Need ' + this.formatCurrency(billsCoverage.shortfall) + ' more.Fun spending locked.';
             summaryBg = 'bg-red-50';
             summaryBorder = 'border-red-300';
             summaryTextColor = 'text-red-800';
@@ -1462,8 +1467,7 @@ showNotification(message) {
         notification.style.transition = 'opacity 0.3s ease';
         setTimeout(() => notification.remove(), 300);
     }, 2000);
-}
-}
+
 
 // ============================================
 // INITIALIZE APP
