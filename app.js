@@ -464,19 +464,17 @@ class FinanceTracker {
     // Quick preset spending (one-tap)
     addQuickSpending(category, amount, note) {
         const today = new Date().toISOString().split('T')[0];
-
         const spending = {
             id: Date.now(),
             date: today,
-            category,
-            amount,
-            note
+            category: category,
+            amount: amount,
+            note: note
         };
-
         this.spending.unshift(spending);
         this.saveSpending();
         this.render();
-        this.showNotification('💸 ' + note + ' - ' + this.formatCurrency(amount));
+        this.showNotification('Spending added: ' + note + ' - $' + amount);
     }
 
     // ============================================
