@@ -5,7 +5,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyCyZzX5A5QYm3rAVx5XvDoiPduqyvgOFrg",
+    apiKey: "AIzaSyCYzzX5A5QYW3nAVx5XvDoiPduqyvgOFrg",
     authDomain: "finance-tracker-269e2.firebaseapp.com",
     projectId: "finance-tracker-269e2",
     storageBucket: "finance-tracker-269e2.firebasestorage.app",
