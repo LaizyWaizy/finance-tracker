@@ -1337,8 +1337,9 @@ class FinanceTracker {
 // INITIALIZE APP
 // ============================================
 
-let tracker;
+// Make tracker globally available
+window.tracker = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    tracker = new FinanceTracker();
+    window.tracker = new FinanceTracker();
 });
