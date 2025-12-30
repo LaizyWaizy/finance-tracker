@@ -79,10 +79,13 @@ class FinanceTracker {
 
     setupEventListeners() {
         // Income form
-        document.getElementById('income-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addEntry();
-        });
+        const incomeForm = document.getElementById('income-form');
+        if (incomeForm) {
+            incomeForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.addEntry();
+            });
+        }
 
         // Bills form
         const billsForm = document.getElementById('bills-form');
@@ -109,15 +112,20 @@ class FinanceTracker {
         });
 
         // Settings toggle
-        document.getElementById('settings-toggle').addEventListener('click', () => {
-            document.getElementById('settings-panel').classList.toggle('hidden');
-        });
+        const settingsToggle = document.getElementById('settings-toggle');
+        if (settingsToggle) {
+            settingsToggle.addEventListener('click', () => {
+                const settingsPanel = document.getElementById('settings-panel');
+                if (settingsPanel) settingsPanel.classList.toggle('hidden');
+            });
+        }
 
         // Bills toggle
         const billsToggle = document.getElementById('bills-toggle');
         if (billsToggle) {
             billsToggle.addEventListener('click', () => {
-                document.getElementById('bills-panel').classList.toggle('hidden');
+                const billsPanel = document.getElementById('bills-panel');
+                if (billsPanel) billsPanel.classList.toggle('hidden');
             });
         }
 
@@ -125,28 +133,36 @@ class FinanceTracker {
         const budgetToggle = document.getElementById('budget-toggle');
         if (budgetToggle) {
             budgetToggle.addEventListener('click', () => {
-                document.getElementById('budget-panel').classList.toggle('hidden');
+                const budgetPanel = document.getElementById('budget-panel');
+                if (budgetPanel) budgetPanel.classList.toggle('hidden');
             });
         }
 
         // Save settings
-        document.getElementById('save-settings').addEventListener('click', () => {
-            this.updateSettings();
-        });
+        const saveSettings = document.getElementById('save-settings');
+        if (saveSettings) {
+            saveSettings.addEventListener('click', () => {
+                this.updateSettings();
+            });
+        }
 
         // Clear all data
-        document.getElementById('clear-data').addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear ALL data? This cannot be undone.')) {
-                this.clearAllData();
-            }
-        });
+        const clearData = document.getElementById('clear-data');
+        if (clearData) {
+            clearData.addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear ALL data? This cannot be undone.')) {
+                    this.clearAllData();
+                }
+            });
+        }
 
         this.populateSettings();
     }
 
     setDefaultDate() {
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('entry-date').value = today;
+        const entryDate = document.getElementById('entry-date');
+        if (entryDate) entryDate.value = today;
         const spendingDate = document.getElementById('spending-date');
         if (spendingDate) spendingDate.value = today;
     }
