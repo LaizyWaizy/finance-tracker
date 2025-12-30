@@ -1218,25 +1218,42 @@ renderShiftIntelligence() {
         return;
     }
 
-            </div >
+    let worstHtml = '';
+    if (intelligence.worst) {
+        worstHtml = '<div class="bg-red-50 border-2 border-red-200 rounded-lg p-4">' +
+            '<div class="text-sm font-medium text-red-900 mb-2">⚠️ Worst Shift</div>' +
+            '<div class="text-xl font-bold text-red-800">' + intelligence.worst.dayName + ' ' + intelligence.worst.shiftName + '</div>' +
+            '<div class="text-2xl font-bold text-red-600 mt-1">' + this.formatCurrency(intelligence.worst.avgRate) + '/hr</div>' +
+            '<div class="text-xs text-red-700 mt-1">Based on ' + intelligence.worst.count + ' shifts</div>' +
+            '</div>';
+    }
 
-        ${
-            intelligence.all.length > 2 ? `
-            <div class="mt-4">
-                <div class="text-sm font-medium text-gray-700 mb-2">All Shifts (sorted by $/hr)</div>
-                <div class="space-y-1">
-                    ${intelligence.all.slice(0, 5).map(s => `
-                        <div class="flex justify-between items-center text-sm py-1 px-2 bg-gray-50 rounded">
-                            <span>${s.dayName} ${s.shiftName}</span>
-                            <span class="font-bold">${this.formatCurrency(s.avgRate)}/hr</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-            ` : ''
+    let allShiftsHtml = '';
+    if (intelligence.all.length > 2) {
+        const shiftsList = intelligence.all.slice(0, 5).map(s =>
+            '<div class="flex justify-between items-center text-sm py-1 px-2 bg-gray-50 rounded">' +
+            '<span>' + s.dayName + ' ' + s.shiftName + '</span>' +
+            '<span class="font-bold">' + this.formatCurrency(s.avgRate) + '/hr</span>' +
+            '</div>'
+        ).join('');
+
+        allShiftsHtml = '<div class="mt-4">' +
+            '<div class="text-sm font-medium text-gray-700 mb-2">All Shifts (sorted by $/hr)</div>' +
+            '<div class="space-y-1">' + shiftsList + '</div>' +
+            '</div>';
     }
-    `;
-    }
+
+    container.innerHTML = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' +
+        '<div class="bg-green-50 border-2 border-green-200 rounded-lg p-4">' +
+        '<div class="text-sm font-medium text-green-900 mb-2">🏆 Best Shift</div>' +
+        '<div class="text-xl font-bold text-green-800">' + intelligence.best.dayName + ' ' + intelligence.best.shiftName + '</div>' +
+        '<div class="text-2xl font-bold text-green-600 mt-1">' + this.formatCurrency(intelligence.best.avgRate) + '/hr</div>' +
+        '<div class="text-xs text-green-700 mt-1">Based on ' + intelligence.best.count + ' shifts</div>' +
+        '</div>' +
+        worstHtml +
+        '</div>' +
+        allShiftsHtml;
+}
 
 renderChart() {
     const chartContainer = document.getElementById('weekly-chart');
