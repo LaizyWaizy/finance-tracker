@@ -1,13 +1,11 @@
-// Firebase Configuration and Integration
-// This file handles all Firebase operations for cross-device sync
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, query, where, onSnapshot, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-
-// ✅ Firebase Configuration - Auto-configured for finance-tracker-269e2
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyCYzzX5A5QYW3nAVx5XvDoiPduqyvgOFrg",
+    apiKey: "AIzaSyCyZzX5A5QYm3rAVx5XvDoiPduqyvgOFrg",
     authDomain: "finance-tracker-269e2.firebaseapp.com",
     projectId: "finance-tracker-269e2",
     storageBucket: "finance-tracker-269e2.firebasestorage.app",
@@ -19,100 +17,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-// Auto sign-in anonymously (no login required)
-let currentUser = null;
-
-signInAnonymously(auth)
-    .then(() => {
-        console.log('✅ Firebase connected');
-    })
-    .catch((error) => {
-        console.error('Firebase auth error:', error);
-    });
-
-// Listen for auth state changes
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        console.log('✅ User authenticated:', user.uid);
-
-        // Trigger initial sync when user is ready
-        if (window.tracker) {
-            window.tracker.syncFromFirebase();
-        }
+// Enable offline persistence (so it works on your phone in the subway!)
+enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code == 'failed-precondition') {
+        // Multiple tabs open, persistence can only be enabled in one tab at a a time.
+        console.log("Persistence failed: Multiple tabs open");
+    } else if (err.code == 'unimplemented') {
+        // The current browser does not support all of the features required to enable persistence
+        console.log("Persistence failed: Not supported");
     }
 });
 
-// ============================================
-// FIREBASE SYNC FUNCTIONS
-// ============================================
-
-// Save data to Firebase
-async function saveToFirebase(dataType, data) {
-    if (!currentUser) {
-        console.log('⏳ Waiting for auth...');
-        return;
-    }
-
-    try {
-        await setDoc(doc(db, 'users', currentUser.uid, 'data', dataType), {
-            data: data,
-            lastUpdated: new Date().toISOString()
-        });
-        console.log(`✅ Saved ${dataType} to Firebase`);
-    } catch (error) {
-        console.error(`❌ Error saving ${dataType}:`, error);
-    }
-}
-
-// Load data from Firebase
-async function loadFromFirebase(dataType) {
-    if (!currentUser) {
-        console.log('⏳ Waiting for auth...');
-        return null;
-    }
-
-    try {
-        const docRef = doc(db, 'users', currentUser.uid, 'data', dataType);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-            console.log(`✅ Loaded ${dataType} from Firebase`);
-            return docSnap.data().data;
-        } else {
-            console.log(`ℹ️ No ${dataType} found in Firebase`);
-            return null;
-        }
-    } catch (error) {
-        console.error(`❌ Error loading ${dataType}:`, error);
-        return null;
-    }
-}
-
-// Listen for real-time updates
-function listenToFirebase(dataType, callback) {
-    if (!currentUser) {
-        console.log('⏳ Waiting for auth...');
-        return;
-    }
-
-    const docRef = doc(db, 'users', currentUser.uid, 'data', dataType);
-
-    return onSnapshot(docRef, (doc) => {
-        if (doc.exists()) {
-            console.log(`🔄 ${dataType} updated from another device`);
-            callback(doc.data().data);
-        }
-    });
-}
-
-// Export functions
-export {
-    db,
-    auth,
-    currentUser,
-    saveToFirebase,
-    loadFromFirebase,
-    listenToFirebase
-};
+export { db, auth, provider, collection, addDoc, getDocs, doc, setDoc, deleteDoc, query, where, onSnapshot, signInWithPopup, signOut, onAuthStateChanged };
