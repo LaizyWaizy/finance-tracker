@@ -868,20 +868,108 @@ class FinanceTracker {
 
     renderBudgetOverview() {
         const budgetStatus = this.calculateBudgetStatus();
+        const billsCoverage = this.checkBillsCoverage();
+
+        // Smart Summary Card
+        const summaryContainer = document.getElementById('budget-summary');
+        if (summaryContainer) {
+            const categories = Object.entries(budgetStatus);
+            const redCategories = categories.filter(([_, s]) => s.percent >= 100);
+            const yellowCategories = categories.filter(([_, s]) => s.percent >= 80 && s.percent < 100);
+            const greenCategories = categories.filter(([_, s]) => s.percent < 80);
+
+            let summaryStatus, summaryIcon, summaryText, summaryBg, summaryBorder, summaryTextColor;
+
+            if (!billsCoverage.covered) {
+                summaryStatus = 'critical';
+                summaryIcon = '🚨';
+                summaryText = `Bills not covered — Need ${this.formatCurrency(billsCoverage.shortfall)} more. Fun spending locked.`;
+                summaryBg = 'bg-red-50';
+                summaryBorder = 'border-red-300';
+                summaryTextColor = 'text-red-800';
+            } else if (redCategories.length > 0) {
+                const cat = redCategories[0][0];
+                summaryStatus = 'over';
+                summaryIcon = '🔴';
+                summaryText = `${cat.charAt(0).toUpperCase() + cat.slice(1)} budget blown — Work recommended`;
+                summaryBg = 'bg-red-50';
+                summaryBorder = 'border-red-300';
+                summaryTextColor = 'text-red-800';
+            } else if (yellowCategories.length > 0) {
+                const cat = yellowCategories[0][0];
+                const pct = Math.round(yellowCategories[0][1].percent);
+                summaryStatus = 'warning';
+                summaryIcon = '🟡';
+                summaryText = `${cat.charAt(0).toUpperCase() + cat.slice(1)} at ${pct}% — Chill on spending`;
+                summaryBg = 'bg-yellow-50';
+                summaryBorder = 'border-yellow-300';
+                summaryTextColor = 'text-yellow-800';
+            } else {
+                const maxRemaining = Math.max(...categories.map(([_, s]) => s.remaining));
+                const maxCat = categories.find(([_, s]) => s.remaining === maxRemaining);
+                summaryStatus = 'good';
+                summaryIcon = '🟢';
+                summaryText = `Budget healthy — ${this.formatCurrency(maxRemaining)} ${maxCat[0]} left`;
+                summaryBg = 'bg-green-50';
+                summaryBorder = 'border-green-300';
+                summaryTextColor = 'text-green-800';
+            }
+
+            summaryContainer.innerHTML = `
+                <div class="flex items-center ${summaryBg} ${summaryBorder} ${summaryTextColor}">
+                    <span class="text-3xl mr-3">${summaryIcon}</span>
+                    <div class="flex-1">
+                        <div class="font-bold text-lg">${summaryText}</div>
+                    </div>
+                </div>
+            `;
+            summaryContainer.className = `mb-4 p-4 rounded-lg border-2 ${summaryBg} ${summaryBorder}`;
+        }
+
+        // Category Breakdown with Progress Bars
         const container = document.getElementById('budget-overview');
+        if (!container) return;
 
         container.innerHTML = Object.entries(budgetStatus).map(([category, status]) => {
             const colorClass = {
-                green: 'bg-green-100 text-green-800',
-                yellow: 'bg-yellow-100 text-yellow-800',
-                red: 'bg-red-100 text-red-800'
+                green: 'bg-green-500',
+                yellow: 'bg-yellow-500',
+                red: 'bg-red-500'
             }[status.color];
 
+            const bgClass = {
+                green: 'bg-green-50 border-green-200',
+                yellow: 'bg-yellow-50 border-yellow-200',
+                red: 'bg-red-50 border-red-200'
+            }[status.color];
+
+            const warningIcon = status.percent >= 90 ? '⚠️' : '';
+            const locked = !billsCoverage.covered && category === 'fun';
+
             return `
-                <div class="p-3 rounded-lg ${colorClass}">
-                    <div class="font-medium capitalize">${category}</div>
-                    <div class="text-sm">${this.formatCurrency(status.spent)} / ${this.formatCurrency(status.limit)}</div>
-                    <div class="text-xs">${Math.round(status.percent)}% used</div>
+                <div class="p-4 rounded-lg border-2 ${bgClass} ${locked ? 'opacity-60' : ''}">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold capitalize text-gray-800">${category}</span>
+                        <span class="text-sm font-medium text-gray-700">${Math.round(status.percent)}% ${warningIcon}</span>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                        <div class="${colorClass} h-3 rounded-full transition-all duration-500" 
+                             style="width: ${Math.min(status.percent, 100)}%"></div>
+                    </div>
+                    
+                    <!-- Spent / Limit -->
+                    <div class="text-sm text-gray-700 mb-1">
+                        ${this.formatCurrency(status.spent)} / ${this.formatCurrency(status.limit)}
+                    </div>
+                    
+                    <!-- Remaining (Psychological Hack) -->
+                    <div class="text-lg font-bold ${status.remaining > 0 ? 'text-green-600' : 'text-red-600'}">
+                        Remaining: ${this.formatCurrency(Math.max(status.remaining, 0))}
+                    </div>
+                    
+                    ${locked ? '<div class="text-xs text-red-600 font-bold mt-2">🔒 LOCKED - Bills not covered</div>' : ''}
                 </div>
             `;
         }).join('');
