@@ -129,6 +129,17 @@
         </div>
     </footer>
 
+    <script type="module">
+        import { auth, signOut } from './firebase-config.js';
+        const btn = document.getElementById('logout-btn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                if (confirm('Log out now?')) {
+                    signOut(auth).then(() => window.location.href = 'login.html');
+                }
+            });
+        }
+    </script>
     <script type="module" src="app.js"></script>
 </body>
 

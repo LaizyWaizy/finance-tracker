@@ -37,13 +37,31 @@
                     <span>⚙️</span>
                     <span class="font-medium">Settings</span>
                 </a>
-                <button id="logout-btn"
+                <button id="logout-btn" type="button"
                     class="flex items-center gap-2 p-3 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all ml-auto">
                     <span>👋</span>
                     <span class="font-medium">Logout</span>
                 </button>
             </div>
     </nav>
+
+    <script type="module">
+        import { auth, signOut } from './firebase-config.js';
+
+        // Force attach listener immediately
+        const btn = document.getElementById('logout-btn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                if (confirm('Log out now?')) {
+                    signOut(auth).then(() => {
+                        window.location.href = 'login.html';
+                    });
+                }
+            });
+            console.log("Logout button armed! 🔫");
+        }
+    </script>
+    <script type="module" src="app.js"></script>
 
     <!-- Main Container -->
     <main class="container mx-auto px-4 py-6 max-w-6xl">
