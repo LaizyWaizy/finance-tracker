@@ -1064,14 +1064,13 @@ class FinanceTracker {
             const categories = Object.entries(budgetStatus);
             const redCategories = categories.filter(([_, s]) => s.percent >= 100);
             const yellowCategories = categories.filter(([_, s]) => s.percent >= 80 && s.percent < 100);
-            const greenCategories = categories.filter(([_, s]) => s.percent < 80);
 
             let summaryStatus, summaryIcon, summaryText, summaryBg, summaryBorder, summaryTextColor;
 
             if (!billsCoverage.covered) {
                 summaryStatus = 'critical';
                 summaryIcon = '🚨';
-                summaryText = 'Bills not covered — Need ' + this.formatCurrency(billsCoverage.shortfall) + ' more.Fun spending locked.';
+                summaryText = 'Bills not covered — Need ' + this.formatCurrency(billsCoverage.shortfall) + ' more. Fun spending locked.';
                 summaryBg = 'bg-red-50';
                 summaryBorder = 'border-red-300';
                 summaryTextColor = 'text-red-800';
@@ -1094,7 +1093,7 @@ class FinanceTracker {
                 summaryTextColor = 'text-yellow-800';
             } else {
                 const maxRemaining = Math.max(...categories.map(([_, s]) => s.remaining));
-                const maxCat = categories.find(([_, s]) => s.remaining === maxRemaining);
+                const maxCat = categories.find(([_, s]) => s.remaining === maxRemaining) || ['General', {}];
                 summaryStatus = 'good';
                 summaryIcon = '🟢';
                 summaryText = 'Budget healthy — ' + this.formatCurrency(maxRemaining) + ' ' + maxCat[0] + ' left';
@@ -1113,7 +1112,6 @@ class FinanceTracker {
             summaryContainer.className = 'mb-4 p-4 rounded-lg border-2 ' + summaryBg + ' ' + summaryBorder;
         }
 
-
         // Category Breakdown with Progress Bars
         const container = document.getElementById('budget-overview');
         if (!container) return;
@@ -1130,7 +1128,6 @@ class FinanceTracker {
                 bgClass = 'bg-red-50 border-red-200';
             }
 
-            // Check lock status
             const locked = status.percent >= 100 && !billsCoverage.covered;
 
             return '<div class="p-4 rounded-lg border-2 mb-4 ' + bgClass + '">' +
@@ -1140,348 +1137,342 @@ class FinanceTracker {
                 Math.round(status.percent) + '%' +
                 '</span>' +
                 '</div>' +
-
                 '<div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">' +
                 '<div class="' + colorClass + ' h-2.5 rounded-full" style="width: ' + Math.min(status.percent, 100) + '%"></div>' +
                 '</div>' +
-
                 '<div class="text-sm text-gray-700 mb-1">' +
                 this.formatCurrency(status.spent) + ' / ' + this.formatCurrency(status.limit) +
                 '</div>' +
-
                 '<div class="text-lg font-bold ' + (status.remaining > 0 ? 'text-green-600' : 'text-red-600') + '">' +
                 'Remaining: ' + this.formatCurrency(Math.max(status.remaining, 0)) +
                 '</div>' +
-
                 (locked ? '<div class="text-xs text-red-600 font-bold mt-2">🔒 LOCKED - Bills not covered</div>' : '') +
                 '</div>';
         }).join('');
-
-    }
-}
-
-renderProgress() {
-    if (!document.getElementById('progress-current')) return;
-
-    const weekNet = this.calculateWeekNet();
-    const weeklyTarget = this.settings.weeklyTarget;
-    const percent = weeklyTarget > 0 ? Math.min((weekNet / weeklyTarget) * 100, 100) : 0;
-
-    document.getElementById('progress-current').textContent = this.formatCurrency(weekNet);
-    document.getElementById('progress-target').textContent = this.formatCurrency(weeklyTarget);
-    document.getElementById('progress-percent').textContent = Math.round(percent) + '%';
-    document.getElementById('progress-bar').style.width = percent + '%';
-
-    const progressBar = document.getElementById('progress-bar');
-    if (percent >= 100) {
-        progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-green';
-    } else if (percent >= 70) {
-        progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-bg';
-    } else if (percent >= 40) {
-        progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-yellow';
-    } else {
-        progressBar.className = 'h-4 rounded-full transition-all duration-500 bg-red-400';
     }
 
-    const statusEl = document.getElementById('progress-status');
-    if (weeklyTarget === 0) {
-        statusEl.textContent = 'Set your weekly target in Settings';
-        statusEl.className = 'text-sm text-gray-600 mt-2';
-    } else if (percent >= 100) {
-        statusEl.textContent = '🎉 Weekly target achieved! You\'re crushing it!';
-        statusEl.className = 'text-sm text-green-600 font-medium mt-2';
-    } else if (percent >= 70) {
-        statusEl.textContent = '💪 ' + Math.round(100 - percent) + '% to go - almost there!';
-        statusEl.className = 'text-sm text-purple-600 mt-2';
-    } else {
-        const remaining = weeklyTarget - weekNet;
-        statusEl.textContent = this.formatCurrency(remaining) + ' more needed this week';
-        statusEl.className = 'text-sm text-gray-600 mt-2';
-    }
-}
+    renderProgress() {
+        if (!document.getElementById('progress-current')) return;
 
-renderDecision() {
-    if (!document.getElementById('decision-icon')) return;
+        const weekNet = this.calculateWeekNet();
+        const weeklyTarget = this.settings.weeklyTarget;
+        const percent = weeklyTarget > 0 ? Math.min((weekNet / weeklyTarget) * 100, 100) : 0;
 
-    const decision = this.getDecision();
+        document.getElementById('progress-current').textContent = this.formatCurrency(weekNet);
+        document.getElementById('progress-target').textContent = this.formatCurrency(weeklyTarget);
+        document.getElementById('progress-percent').textContent = Math.round(percent) + '%';
+        document.getElementById('progress-bar').style.width = percent + '%';
 
-    document.getElementById('decision-icon').textContent = decision.icon;
-    document.getElementById('decision-text').textContent = decision.status;
-    document.getElementById('decision-text').className = 'text-4xl font-bold ' + decision.color;
+        const progressBar = document.getElementById('progress-bar');
+        if (percent >= 100) {
+            progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-green';
+        } else if (percent >= 70) {
+            progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-bg';
+        } else if (percent >= 40) {
+            progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-yellow';
+        } else {
+            progressBar.className = 'h-4 rounded-full transition-all duration-500 bg-red-400';
+        }
 
-    const mainReason = decision.reasons.length > 0 ? decision.reasons[0] : 'All systems normal';
-    document.getElementById('decision-reason').textContent = mainReason.replace(/^[^\s]+\s/, '');
-
-    const detailsContainer = document.getElementById('decision-details');
-    if (decision.reasons.length > 0) {
-        detailsContainer.innerHTML = '<div class="font-medium mb-2">Analysis:</div>' +
-            decision.reasons.map(r => '<div class="py-1">• ' + r + '</div>').join('');
-    } else {
-        detailsContainer.innerHTML = '<div class="text-gray-500">No data yet - add some entries!</div>';
-    }
-
-    const indicator = document.getElementById('decision-indicator');
-    if (indicator) {
-        indicator.className = 'decision-card rounded-2xl shadow-xl p-8 text-center mb-6 ' + decision.bgColor;
-    }
-}
-
-renderShiftIntelligence() {
-    const container = document.getElementById('shift-intelligence');
-    if (!container) return;
-
-    const intelligence = this.getShiftIntelligence();
-
-    if (!intelligence.best) {
-        container.innerHTML = '<div class="text-gray-500 text-center py-4">Add more DoorDash entries to see shift analysis</div>';
-        return;
+        const statusEl = document.getElementById('progress-status');
+        if (weeklyTarget === 0) {
+            statusEl.textContent = 'Set your weekly target in Settings';
+            statusEl.className = 'text-sm text-gray-600 mt-2';
+        } else if (percent >= 100) {
+            statusEl.textContent = '🎉 Weekly target achieved! You\'re crushing it!';
+            statusEl.className = 'text-sm text-green-600 font-medium mt-2';
+        } else if (percent >= 70) {
+            statusEl.textContent = '💪 ' + Math.round(100 - percent) + '% to go - almost there!';
+            statusEl.className = 'text-sm text-purple-600 mt-2';
+        } else {
+            const remaining = weeklyTarget - weekNet;
+            statusEl.textContent = this.formatCurrency(remaining) + ' more needed this week';
+            statusEl.className = 'text-sm text-gray-600 mt-2';
+        }
     }
 
-    let worstHtml = '';
-    if (intelligence.worst) {
-        worstHtml = '<div class="bg-red-50 border-2 border-red-200 rounded-lg p-4">' +
-            '<div class="text-sm font-medium text-red-900 mb-2">⚠️ Worst Shift</div>' +
-            '<div class="text-xl font-bold text-red-800">' + intelligence.worst.dayName + ' ' + intelligence.worst.shiftName + '</div>' +
-            '<div class="text-2xl font-bold text-red-600 mt-1">' + this.formatCurrency(intelligence.worst.avgRate) + '/hr</div>' +
-            '<div class="text-xs text-red-700 mt-1">Based on ' + intelligence.worst.count + ' shifts</div>' +
-            '</div>';
+    renderDecision() {
+        if (!document.getElementById('decision-icon')) return;
+
+        const decision = this.getDecision();
+
+        document.getElementById('decision-icon').textContent = decision.icon;
+        document.getElementById('decision-text').textContent = decision.status;
+        document.getElementById('decision-text').className = 'text-4xl font-bold ' + decision.color;
+
+        const mainReason = decision.reasons.length > 0 ? decision.reasons[0] : 'All systems normal';
+        document.getElementById('decision-reason').textContent = mainReason.replace(/^[^\s]+\s/, '');
+
+        const detailsContainer = document.getElementById('decision-details');
+        if (decision.reasons.length > 0) {
+            detailsContainer.innerHTML = '<div class="font-medium mb-2">Analysis:</div>' +
+                decision.reasons.map(r => '<div class="py-1">• ' + r + '</div>').join('');
+        } else {
+            detailsContainer.innerHTML = '<div class="text-gray-500">No data yet - add some entries!</div>';
+        }
+
+        const indicator = document.getElementById('decision-indicator');
+        if (indicator) {
+            indicator.className = 'decision-card rounded-2xl shadow-xl p-8 text-center mb-6 ' + decision.bgColor;
+        }
     }
 
-    let allShiftsHtml = '';
-    if (intelligence.all.length > 2) {
-        const shiftsList = intelligence.all.slice(0, 5).map(s =>
-            '<div class="flex justify-between items-center text-sm py-1 px-2 bg-gray-50 rounded">' +
-            '<span>' + s.dayName + ' ' + s.shiftName + '</span>' +
-            '<span class="font-bold">' + this.formatCurrency(s.avgRate) + '/hr</span>' +
-            '</div>'
-        ).join('');
+    renderShiftIntelligence() {
+        const container = document.getElementById('shift-intelligence');
+        if (!container) return;
 
-        allShiftsHtml = '<div class="mt-4">' +
-            '<div class="text-sm font-medium text-gray-700 mb-2">All Shifts (sorted by $/hr)</div>' +
-            '<div class="space-y-1">' + shiftsList + '</div>' +
-            '</div>';
-    }
+        const intelligence = this.getShiftIntelligence();
 
-    container.innerHTML = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' +
-        '<div class="bg-green-50 border-2 border-green-200 rounded-lg p-4">' +
-        '<div class="text-sm font-medium text-green-900 mb-2">🏆 Best Shift</div>' +
-        '<div class="text-xl font-bold text-green-800">' + intelligence.best.dayName + ' ' + intelligence.best.shiftName + '</div>' +
-        '<div class="text-2xl font-bold text-green-600 mt-1">' + this.formatCurrency(intelligence.best.avgRate) + '/hr</div>' +
-        '<div class="text-xs text-green-700 mt-1">Based on ' + intelligence.best.count + ' shifts</div>' +
-        '</div>' +
-        worstHtml +
-        '</div>' +
-        allShiftsHtml;
-}
+        if (!intelligence.best) {
+            container.innerHTML = '<div class="text-gray-500 text-center py-4">Add more DoorDash entries to see shift analysis</div>';
+            return;
+        }
 
-renderChart() {
-    const chartContainer = document.getElementById('weekly-chart');
-    const labelsContainer = document.getElementById('chart-labels');
+        let worstHtml = '';
+        if (intelligence.worst) {
+            worstHtml = '<div class="bg-red-50 border-2 border-red-200 rounded-lg p-4">' +
+                '<div class="text-sm font-medium text-red-900 mb-2">⚠️ Worst Shift</div>' +
+                '<div class="text-xl font-bold text-red-800">' + intelligence.worst.dayName + ' ' + intelligence.worst.shiftName + '</div>' +
+                '<div class="text-2xl font-bold text-red-600 mt-1">' + this.formatCurrency(intelligence.worst.avgRate) + '/hr</div>' +
+                '<div class="text-xs text-red-700 mt-1">Based on ' + intelligence.worst.count + ' shifts</div>' +
+                '</div>';
+        }
 
-    if (!chartContainer || !labelsContainer) return;
+        let allShiftsHtml = '';
+        if (intelligence.all.length > 2) {
+            const shiftsList = intelligence.all.slice(0, 5).map(s =>
+                '<div class="flex justify-between items-center text-sm py-1 px-2 bg-gray-50 rounded">' +
+                '<span>' + s.dayName + ' ' + s.shiftName + '</span>' +
+                '<span class="font-bold">' + this.formatCurrency(s.avgRate) + '/hr</span>' +
+                '</div>'
+            ).join('');
 
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        days.push(date);
-    }
+            allShiftsHtml = '<div class="mt-4">' +
+                '<div class="text-sm font-medium text-gray-700 mb-2">All Shifts (sorted by $/hr)</div>' +
+                '<div class="space-y-1">' + shiftsList + '</div>' +
+                '</div>';
+        }
 
-    const dailyTotals = days.map(day => {
-        const dayStr = day.toISOString().split('T')[0];
-        return this.entries
-            .filter(e => e.date === dayStr)
-            .reduce((sum, e) => sum + e.net, 0);
-    });
-
-    const maxValue = Math.max(...dailyTotals, 1);
-
-    chartContainer.innerHTML = days.map((day, i) => {
-        const value = dailyTotals[i];
-        const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
-        const color = value > 0 ? 'bg-green-500' : 'bg-gray-300';
-        const displayValue = value > 0 ? '$' + value.toFixed(0) : '';
-
-        return '<div class="flex-1 flex flex-col justify-end items-center">' +
-            '<div class="text-xs font-medium text-gray-700 mb-1">' + displayValue + '</div>' +
-            '<div class="chart-bar w-full ' + color + ' rounded-t" ' +
-            'style="height: ' + Math.max(heightPercent, 2) + '%" ' +
-            'title="' + this.formatCurrency(value) + '"></div>' +
-            '</div>';
-    }).join('');
-
-    labelsContainer.innerHTML = days.map(day => {
-        const dayName = day.toLocaleDateString('en-US', { weekday: 'short' });
-        return '<div class="flex-1 text-center">' + dayName + '</div>';
-    }).join('');
-}
-
-renderEntries() {
-    const tbody = document.getElementById('entries-table');
-    const noEntries = document.getElementById('no-entries');
-
-    if (!tbody || !noEntries) return;
-
-    if (this.entries.length === 0) {
-        tbody.innerHTML = '';
-        noEntries.classList.remove('hidden');
-        return;
-    }
-
-    noEntries.classList.add('hidden');
-
-    tbody.innerHTML = this.entries.slice(0, 20).map(entry => {
-        const dateStr = new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const netColor = entry.net >= 0 ? 'text-green-600' : 'text-red-600';
-
-        return '<tr class="hover:bg-gray-50 transition-colors">' +
-            '<td class="px-4 py-3 text-sm text-gray-800">' + dateStr + '</td>' +
-            '<td class="px-4 py-3 text-sm text-gray-800">' + entry.source + '</td>' +
-            '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + entry.hours.toFixed(1) + '</td>' +
-            '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + this.formatCurrency(entry.gross) + '</td>' +
-            '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + this.formatCurrency(entry.expenses) + '</td>' +
-            '<td class="px-4 py-3 text-sm font-medium text-right ' + netColor + '">' + this.formatCurrency(entry.net) + '</td>' +
-            '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + this.formatCurrency(entry.hourly) + '</td>' +
-            '<td class="px-4 py-3 text-right">' +
-            '<button onclick="tracker.deleteEntry(' + entry.id + ')" class="text-red-500 hover:text-red-700 font-medium text-sm">Delete</button>' +
-            '</td>' +
-            '</tr>';
-    }).join('');
-}
-
-renderBillsList() {
-    const container = document.getElementById('bills-list');
-    if (!container) return;
-
-    if (this.bills.length === 0) {
-        container.innerHTML = '<div class="text-gray-500 text-center py-4">No bills added yet</div>';
-        return;
-    }
-
-    container.innerHTML = this.bills.map(bill => {
-        const suffix = bill.frequency === 'monthly' ? 'th' : '';
-        return '<div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">' +
-            '<div>' +
-            '<div class="font-medium">' + bill.name + '</div>' +
-            '<div class="text-sm text-gray-600">' + bill.frequency + ' - Due: ' + bill.dueDate + suffix + '</div>' +
+        container.innerHTML = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' +
+            '<div class="bg-green-50 border-2 border-green-200 rounded-lg p-4">' +
+            '<div class="text-sm font-medium text-green-900 mb-2">🏆 Best Shift</div>' +
+            '<div class="text-xl font-bold text-green-800">' + intelligence.best.dayName + ' ' + intelligence.best.shiftName + '</div>' +
+            '<div class="text-2xl font-bold text-green-600 mt-1">' + this.formatCurrency(intelligence.best.avgRate) + '/hr</div>' +
+            '<div class="text-xs text-green-700 mt-1">Based on ' + intelligence.best.count + ' shifts</div>' +
             '</div>' +
-            '<div class="flex items-center gap-3">' +
-            '<div class="text-lg font-bold">' + this.formatCurrency(bill.amount) + '</div>' +
-            '<button onclick="tracker.deleteBill(' + bill.id + ')" class="text-red-500 hover:text-red-700 text-sm">Delete</button>' +
+            worstHtml +
             '</div>' +
-            '</div>';
-    }).join('');
-}
-
-renderSpendingList() {
-    const container = document.getElementById('spending-list');
-    if (!container) return;
-
-    if (this.spending.length === 0) {
-        container.innerHTML = '<div class="text-gray-500 text-center py-4">No spending logged yet</div>';
-        return;
+            allShiftsHtml;
     }
 
-    container.innerHTML = this.spending.slice(0, 10).map(s => {
-        const dateStr = new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const noteHtml = s.note ? '<div class="text-xs text-gray-500">' + s.note + '</div>' : '';
+    renderChart() {
+        const chartContainer = document.getElementById('weekly-chart');
+        const labelsContainer = document.getElementById('chart-labels');
 
-        return '<div class="flex justify-between items-center p-2 hover:bg-gray-50 rounded">' +
-            '<div class="flex-1">' +
-            '<div class="text-sm font-medium capitalize">' + s.category + '</div>' +
-            '<div class="text-xs text-gray-600">' + dateStr + '</div>' +
-            noteHtml +
-            '</div>' +
-            '<div class="flex items-center gap-2">' +
-            '<div class="font-bold text-red-600">' + this.formatCurrency(s.amount) + '</div>' +
-            '<button onclick="tracker.deleteSpending(' + s.id + ')" class="text-red-500 hover:text-red-700 text-xs">×</button>' +
-            '</div>' +
-            '</div>';
-    }).join('');
-}
+        if (!chartContainer || !labelsContainer) return;
 
-// ============================================
-// SETTINGS
-// ============================================
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            days.push(date);
+        }
 
-populateSettings() {
-    // Helper function to safely set value
-    const setVal = (id, value) => {
-        const el = document.getElementById(id);
-        if (el) el.value = value;
-    };
+        const dailyTotals = days.map(day => {
+            const dayStr = day.toISOString().split('T')[0];
+            return this.entries
+                .filter(e => e.date === dayStr)
+                .reduce((sum, e) => sum + e.net, 0);
+        });
 
-    setVal('weekly-target', this.settings.weeklyTarget);
-    setVal('monthly-target', this.settings.monthlyTarget);
-    setVal('target-hourly', this.settings.targetHourly);
-    setVal('min-runway', this.settings.minRunway);
-    setVal('daily-expenses', this.settings.dailyExpenses);
-    setVal('starting-balance', this.settings.startingBalance);
+        const maxValue = Math.max(...dailyTotals, 1);
 
-    // Budgets
-    setVal('budget-food', this.settings.budgets.food);
-    setVal('budget-gas', this.settings.budgets.gas);
-    setVal('budget-fun', this.settings.budgets.fun);
-    setVal('budget-misc', this.settings.budgets.misc);
-}
+        chartContainer.innerHTML = days.map((day, i) => {
+            const value = dailyTotals[i];
+            const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
+            const color = value > 0 ? 'bg-green-500' : 'bg-gray-300';
+            const displayValue = value > 0 ? '$' + value.toFixed(0) : '';
 
-updateSettings() {
-    this.settings.weeklyTarget = parseFloat(document.getElementById('weekly-target').value);
-    this.settings.monthlyTarget = parseFloat(document.getElementById('monthly-target').value);
-    this.settings.targetHourly = parseFloat(document.getElementById('target-hourly').value);
-    this.settings.minRunway = parseInt(document.getElementById('min-runway').value);
-    this.settings.dailyExpenses = parseFloat(document.getElementById('daily-expenses').value);
-    this.settings.startingBalance = parseFloat(document.getElementById('starting-balance').value);
+            return '<div class="flex-1 flex flex-col justify-end items-center">' +
+                '<div class="text-xs font-medium text-gray-700 mb-1">' + displayValue + '</div>' +
+                '<div class="chart-bar w-full ' + color + ' rounded-t" ' +
+                'style="height: ' + Math.max(heightPercent, 2) + '%" ' +
+                'title="' + this.formatCurrency(value) + '"></div>' +
+                '</div>';
+        }).join('');
 
-    this.settings.budgets.food = parseFloat(document.getElementById('budget-food').value);
-    this.settings.budgets.gas = parseFloat(document.getElementById('budget-gas').value);
-    this.settings.budgets.fun = parseFloat(document.getElementById('budget-fun').value);
-    this.settings.budgets.misc = parseFloat(document.getElementById('budget-misc').value);
+        labelsContainer.innerHTML = days.map(day => {
+            const dayName = day.toLocaleDateString('en-US', { weekday: 'short' });
+            return '<div class="flex-1 text-center">' + dayName + '</div>';
+        }).join('');
+    }
 
-    this.saveSettings();
-    this.render();
-    this.showNotification('Settings saved! ⚙️');
-}
+    renderEntries() {
+        const tbody = document.getElementById('entries-table');
+        const noEntries = document.getElementById('no-entries');
 
-clearAllData() {
-    localStorage.removeItem('financeEntries');
-    localStorage.removeItem('financeBills');
-    localStorage.removeItem('financeSpending');
-    localStorage.removeItem('financeSettings');
-    this.entries = [];
-    this.bills = [];
-    this.spending = [];
-    this.settings = this.loadSettings();
-    this.populateSettings();
-    this.render();
-    this.showNotification('All data cleared');
-}
+        if (!tbody || !noEntries) return;
 
-// ============================================
-// UTILITIES
-// ============================================
+        if (this.entries.length === 0) {
+            tbody.innerHTML = '';
+            noEntries.classList.remove('hidden');
+            return;
+        }
 
-formatCurrency(value) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(value);
-}
+        noEntries.classList.add('hidden');
 
-showNotification(message) {
-    const notification = document.createElement('div');
-    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-    notification.textContent = message;
-    document.body.appendChild(notification);
+        tbody.innerHTML = this.entries.slice(0, 20).map(entry => {
+            const dateStr = new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const netColor = entry.net >= 0 ? 'text-green-600' : 'text-red-600';
 
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 2000);
-}
+            return '<tr class="hover:bg-gray-50 transition-colors">' +
+                '<td class="px-4 py-3 text-sm text-gray-800">' + dateStr + '</td>' +
+                '<td class="px-4 py-3 text-sm text-gray-800">' + entry.source + '</td>' +
+                '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + entry.hours.toFixed(1) + '</td>' +
+                '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + this.formatCurrency(entry.gross) + '</td>' +
+                '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + this.formatCurrency(entry.expenses) + '</td>' +
+                '<td class="px-4 py-3 text-sm font-medium text-right ' + netColor + '">' + this.formatCurrency(entry.net) + '</td>' +
+                '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + this.formatCurrency(entry.hourly) + '</td>' +
+                '<td class="px-4 py-3 text-right">' +
+                '<button onclick="tracker.deleteEntry(' + entry.id + ')" class="text-red-500 hover:text-red-700 font-medium text-sm">Delete</button>' +
+                '</td>' +
+                '</tr>';
+        }).join('');
+    }
+
+    renderBillsList() {
+        const container = document.getElementById('bills-list');
+        if (!container) return;
+
+        if (this.bills.length === 0) {
+            container.innerHTML = '<div class="text-gray-500 text-center py-4">No bills added yet</div>';
+            return;
+        }
+
+        container.innerHTML = this.bills.map(bill => {
+            const suffix = bill.frequency === 'monthly' ? 'th' : '';
+            return '<div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">' +
+                '<div>' +
+                '<div class="font-medium">' + bill.name + '</div>' +
+                '<div class="text-sm text-gray-600">' + bill.frequency + ' - Due: ' + bill.dueDate + suffix + '</div>' +
+                '</div>' +
+                '<div class="flex items-center gap-3">' +
+                '<div class="text-lg font-bold">' + this.formatCurrency(bill.amount) + '</div>' +
+                '<button onclick="tracker.deleteBill(' + bill.id + ')" class="text-red-500 hover:text-red-700 text-sm">Delete</button>' +
+                '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    renderSpendingList() {
+        const container = document.getElementById('spending-list');
+        if (!container) return;
+
+        if (this.spending.length === 0) {
+            container.innerHTML = '<div class="text-gray-500 text-center py-4">No spending logged yet</div>';
+            return;
+        }
+
+        container.innerHTML = this.spending.slice(0, 10).map(s => {
+            const dateStr = new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const noteHtml = s.note ? '<div class="text-xs text-gray-500">' + s.note + '</div>' : '';
+
+            return '<div class="flex justify-between items-center p-2 hover:bg-gray-50 rounded">' +
+                '<div class="flex-1">' +
+                '<div class="text-sm font-medium capitalize">' + s.category + '</div>' +
+                '<div class="text-xs text-gray-600">' + dateStr + '</div>' +
+                noteHtml +
+                '</div>' +
+                '<div class="flex items-center gap-2">' +
+                '<div class="font-bold text-red-600">' + this.formatCurrency(s.amount) + '</div>' +
+                '<button onclick="tracker.deleteSpending(' + s.id + ')" class="text-red-500 hover:text-red-700 text-xs">×</button>' +
+                '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    // ============================================
+    // SETTINGS
+    // ============================================
+
+    populateSettings() {
+        // Helper function to safely set value
+        const setVal = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value;
+        };
+
+        setVal('weekly-target', this.settings.weeklyTarget);
+        setVal('monthly-target', this.settings.monthlyTarget);
+        setVal('target-hourly', this.settings.targetHourly);
+        setVal('min-runway', this.settings.minRunway);
+        setVal('daily-expenses', this.settings.dailyExpenses);
+        setVal('starting-balance', this.settings.startingBalance);
+
+        // Budgets
+        setVal('budget-food', this.settings.budgets.food);
+        setVal('budget-gas', this.settings.budgets.gas);
+        setVal('budget-fun', this.settings.budgets.fun);
+        setVal('budget-misc', this.settings.budgets.misc);
+    }
+
+    updateSettings() {
+        this.settings.weeklyTarget = parseFloat(document.getElementById('weekly-target').value);
+        this.settings.monthlyTarget = parseFloat(document.getElementById('monthly-target').value);
+        this.settings.targetHourly = parseFloat(document.getElementById('target-hourly').value);
+        this.settings.minRunway = parseInt(document.getElementById('min-runway').value);
+        this.settings.dailyExpenses = parseFloat(document.getElementById('daily-expenses').value);
+        this.settings.startingBalance = parseFloat(document.getElementById('starting-balance').value);
+
+        this.settings.budgets.food = parseFloat(document.getElementById('budget-food').value);
+        this.settings.budgets.gas = parseFloat(document.getElementById('budget-gas').value);
+        this.settings.budgets.fun = parseFloat(document.getElementById('budget-fun').value);
+        this.settings.budgets.misc = parseFloat(document.getElementById('budget-misc').value);
+
+        this.saveSettings();
+        this.render();
+        this.showNotification('Settings saved! ⚙️');
+    }
+
+    clearAllData() {
+        localStorage.removeItem('financeEntries');
+        localStorage.removeItem('financeBills');
+        localStorage.removeItem('financeSpending');
+        localStorage.removeItem('financeSettings');
+        this.entries = [];
+        this.bills = [];
+        this.spending = [];
+        this.settings = this.loadSettings();
+        this.populateSettings();
+        this.render();
+        this.showNotification('All data cleared');
+    }
+
+    // ============================================
+    // UTILITIES
+    // ============================================
+
+    formatCurrency(value) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    }
+
+    showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 2000);
+    }
 }
 
 
