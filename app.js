@@ -1167,6 +1167,8 @@ class FinanceTracker {
         const tbody = document.getElementById('entries-table');
         const noEntries = document.getElementById('no-entries');
 
+        if (!tbody || !noEntries) return;
+
         if (this.entries.length === 0) {
             tbody.innerHTML = '';
             noEntries.classList.remove('hidden');
