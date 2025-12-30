@@ -1113,6 +1113,7 @@ class FinanceTracker {
             summaryContainer.className = 'mb-4 p-4 rounded-lg border-2 ' + summaryBg + ' ' + summaryBorder;
         }
 
+
         // Category Breakdown with Progress Bars
         const container = document.getElementById('budget-overview');
         if (!container) return;
@@ -1480,6 +1481,7 @@ showNotification(message) {
         notification.style.transition = 'opacity 0.3s ease';
         setTimeout(() => notification.remove(), 300);
     }, 2000);
+}
 }
 
 
