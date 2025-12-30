@@ -848,24 +848,6 @@ class FinanceTracker {
 
         const prediction = this.predictWorkOutcome(hours, shiftType, dayOfWeek);
 
-        document.getElementById('planner-results').innerHTML = `
-    < div class="grid grid-cols-2 gap-4" >
-                <div>
-                    <div class="text-sm text-gray-600">Expected Net</div>
-                    <div class="text-2xl font-bold text-purple-600">${this.formatCurrency(prediction.expectedNet)}</div>
-                    <div class="text-xs text-gray-500">@ ${this.formatCurrency(prediction.avgRate)}/hr</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">New Balance</div>
-                    <div class="text-2xl font-bold ${prediction.newBalance >= 0 ? 'text-green-600' : 'text-red-600'}">${this.formatCurrency(prediction.newBalance)}</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">New Runway</div>
-                    <div class="text-2xl font-bold ${prediction.newRunway >= this.settings.minRunway ? 'text-green-600' : 'text-red-600'}">${prediction.newRunway} days</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Status</div>
-                    <div class="text-2xl font-bold ${prediction.statusColor}">${prediction.status}</div>
                 </div>
             </div >
     <div class="mt-4 p-3 bg-purple-50 rounded-lg text-sm">
@@ -874,371 +856,372 @@ class FinanceTracker {
 `;
     }
 
-    // ============================================
-    // DECISION ENGINE (ENHANCED)
-    // ============================================
+// ============================================
+// DECISION ENGINE (ENHANCED)
+// ============================================
 
-    getDecision() {
-        const balance = this.calculateCurrentBalance();
-        const runway = this.calculateRunway();
-        const weekNet = this.calculateWeekNet();
-        const monthNet = this.calculateMonthNet();
-        const weeklyTarget = this.settings.weeklyTarget;
-        const monthlyTarget = this.settings.monthlyTarget;
-        const minRunway = this.settings.minRunway;
-        const budgetStatus = this.calculateBudgetStatus();
+getDecision() {
+    const balance = this.calculateCurrentBalance();
+    const runway = this.calculateRunway();
+    const weekNet = this.calculateWeekNet();
+    const monthNet = this.calculateMonthNet();
+    const weeklyTarget = this.settings.weeklyTarget;
+    const monthlyTarget = this.settings.monthlyTarget;
+    const minRunway = this.settings.minRunway;
+    const budgetStatus = this.calculateBudgetStatus();
 
-        const reasons = [];
-        let status = 'YOU\'RE GOOD';
-        let icon = '✅';
-        let color = 'text-green-600';
-        let bgColor = 'bg-green-50';
+    const reasons = [];
+    let status = 'YOU\'RE GOOD';
+    let icon = '✅';
+    let color = 'text-green-600';
+    let bgColor = 'bg-green-50';
 
-        // RULE 1: Negative balance = CRITICAL
-        if (balance < 0) {
+    // RULE 1: Negative balance = CRITICAL
+    if (balance < 0) {
+        status = 'DASH TODAY';
+        icon = '❌';
+        color = 'text-red-600';
+        bgColor = 'bg-red-50';
+        reasons.push('⚠️ Balance is negative (' + this.formatCurrency(balance) + ')');
+    }
+
+    // RULE 2: Low runway = CRITICAL
+    if (runway < minRunway) {
+        if (status !== 'DASH TODAY') {
             status = 'DASH TODAY';
             icon = '❌';
             color = 'text-red-600';
             bgColor = 'bg-red-50';
-            reasons.push('⚠️ Balance is negative (' + this.formatCurrency(balance) + ')');
         }
+        reasons.push('⚠️ Runway is only ' + runway + ' days (need ' + minRunway + '+)');
+    }
 
-        // RULE 2: Low runway = CRITICAL
-        if (runway < minRunway) {
-            if (status !== 'DASH TODAY') {
-                status = 'DASH TODAY';
-                icon = '❌';
-                color = 'text-red-600';
-                bgColor = 'bg-red-50';
-            }
-            reasons.push('⚠️ Runway is only ' + runway + ' days (need ' + minRunway + '+)');
-        }
+    // RULE 3: Budget pressure
+    const redBudgets = Object.entries(budgetStatus).filter(([_, b]) => b.color === 'red');
+    if (redBudgets.length > 0 && status === "YOU'RE GOOD") {
+        status = 'OPTIONAL';
+        icon = '🟡';
+        color = 'text-yellow-600';
+        bgColor = 'bg-yellow-50';
+        redBudgets.forEach(([cat, _]) => {
+            reasons.push('💸 ' + (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' budget critical');
+        });
+    }
 
-        // RULE 3: Budget pressure
-        const redBudgets = Object.entries(budgetStatus).filter(([_, b]) => b.color === 'red');
-        if (redBudgets.length > 0 && status === "YOU'RE GOOD") {
+    // RULE 4: Weekly target not met
+    if (weekNet < weeklyTarget) {
+        if (status === "YOU'RE GOOD") {
             status = 'OPTIONAL';
             icon = '🟡';
             color = 'text-yellow-600';
             bgColor = 'bg-yellow-50';
-            redBudgets.forEach(([cat, _]) => {
-                reasons.push('💸 ' + (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' budget critical');
-            });
         }
-
-        // RULE 4: Weekly target not met
-        if (weekNet < weeklyTarget) {
-            if (status === "YOU'RE GOOD") {
-                status = 'OPTIONAL';
-                icon = '🟡';
-                color = 'text-yellow-600';
-                bgColor = 'bg-yellow-50';
-            }
-            const remaining = weeklyTarget - weekNet;
-            reasons.push('📊 Weekly goal not met (' + this.formatCurrency(remaining) + ' to go)');
-        }
-
-        // Add positive indicators
-        if (status === "YOU'RE GOOD") {
-            reasons.push('✅ Balance is healthy (' + this.formatCurrency(balance) + ')');
-            reasons.push('✅ Runway is ' + runway + ' days');
-            if (weekNet >= weeklyTarget) {
-                reasons.push('✅ Weekly target achieved!');
-            }
-            if (monthNet >= monthlyTarget) {
-                reasons.push('✅ Monthly target achieved!');
-            }
-        }
-
-        // If optional, add context
-        if (status === 'OPTIONAL') {
-            if (balance > 0) {
-                reasons.push('✓ Balance is positive (' + this.formatCurrency(balance) + ')');
-            }
-            if (runway >= minRunway) {
-                reasons.push('✓ Runway is ' + runway + ' days');
-            }
-        }
-
-        return { status, icon, color, bgColor, reasons };
+        const remaining = weeklyTarget - weekNet;
+        reasons.push('📊 Weekly goal not met (' + this.formatCurrency(remaining) + ' to go)');
     }
 
-    // ============================================
-    // RENDERING
-    // ============================================
-
-    render() {
-        this.renderStats();
-        this.renderMonthlyStats();
-        this.renderBillsOverview();
-        this.renderBudgetOverview();
-        this.renderProgress();
-        this.renderDecision();
-        this.renderShiftIntelligence();
-        this.renderChart();
-        this.renderEntries();
-        this.renderBillsList();
-        this.renderSpendingList();
-        this.updateWorkPlanner();
-    }
-
-    renderStats() {
-        const balance = this.calculateCurrentBalance();
-        const weekNet = this.calculateWeekNet();
-        const avgHourly = this.calculateAvgHourly();
-        const runway = this.calculateRunway();
-
-        if (document.getElementById('current-balance')) {
-            document.getElementById('current-balance').textContent = this.formatCurrency(balance);
-            document.getElementById('current-balance').className = 'text-3xl font-bold mt-2 ' + (balance >= 0 ? 'text-green-600' : 'text-red-600');
+    // Add positive indicators
+    if (status === "YOU'RE GOOD") {
+        reasons.push('✅ Balance is healthy (' + this.formatCurrency(balance) + ')');
+        reasons.push('✅ Runway is ' + runway + ' days');
+        if (weekNet >= weeklyTarget) {
+            reasons.push('✅ Weekly target achieved!');
         }
-
-        if (document.getElementById('week-net')) {
-            document.getElementById('week-net').textContent = this.formatCurrency(weekNet);
-            document.getElementById('week-net').className = 'text-3xl font-bold mt-2 ' + (weekNet >= 0 ? 'text-green-600' : 'text-red-600');
-        }
-
-        if (document.getElementById('avg-hourly')) {
-            document.getElementById('avg-hourly').textContent = this.formatCurrency(avgHourly);
-        }
-
-        if (document.getElementById('runway')) {
-            document.getElementById('runway').textContent = (runway === Infinity ? '∞ days' : runway + ' days');
-            document.getElementById('runway').className = 'text-3xl font-bold mt-2 ' + (runway >= this.settings.minRunway ? 'text-green-600' : 'text-red-600');
+        if (monthNet >= monthlyTarget) {
+            reasons.push('✅ Monthly target achieved!');
         }
     }
 
-    renderMonthlyStats() {
-        if (!document.getElementById('month-net')) return;
+    // If optional, add context
+    if (status === 'OPTIONAL') {
+        if (balance > 0) {
+            reasons.push('✓ Balance is positive (' + this.formatCurrency(balance) + ')');
+        }
+        if (runway >= minRunway) {
+            reasons.push('✓ Runway is ' + runway + ' days');
+        }
+    }
 
-        const monthNet = this.calculateMonthNet();
-        const monthAvg = this.calculateAvgHourly(30);
-        const dayStats = this.getBestWorstDays();
+    return { status, icon, color, bgColor, reasons };
+}
 
-        document.getElementById('month-net').textContent = this.formatCurrency(monthNet);
-        document.getElementById('month-net').className = 'text-3xl font-bold mt-2 ' + (monthNet >= 0 ? 'text-green-600' : 'text-red-600');
+// ============================================
+// RENDERING
+// ============================================
 
-        document.getElementById('month-avg').textContent = this.formatCurrency(monthAvg);
+render() {
+    this.renderStats();
+    this.renderMonthlyStats();
+    this.renderBillsOverview();
+    this.renderBudgetOverview();
+    this.renderProgress();
+    this.renderDecision();
+    this.renderShiftIntelligence();
+    this.renderChart();
+    this.renderEntries();
+    this.renderBillsList();
+    this.renderSpendingList();
+    this.updateWorkPlanner();
+}
 
-        if (dayStats.best) {
-            document.getElementById('best-day').textContent = dayStats.best.name + ' (' + this.formatCurrency(dayStats.best.avgRate) + '/hr)';
+renderStats() {
+    const balance = this.calculateCurrentBalance();
+    const weekNet = this.calculateWeekNet();
+    const avgHourly = this.calculateAvgHourly();
+    const runway = this.calculateRunway();
+
+    if (document.getElementById('current-balance')) {
+        document.getElementById('current-balance').textContent = this.formatCurrency(balance);
+        document.getElementById('current-balance').className = 'text-3xl font-bold mt-2 ' + (balance >= 0 ? 'text-green-600' : 'text-red-600');
+    }
+
+    if (document.getElementById('week-net')) {
+        document.getElementById('week-net').textContent = this.formatCurrency(weekNet);
+        document.getElementById('week-net').className = 'text-3xl font-bold mt-2 ' + (weekNet >= 0 ? 'text-green-600' : 'text-red-600');
+    }
+
+    if (document.getElementById('avg-hourly')) {
+        document.getElementById('avg-hourly').textContent = this.formatCurrency(avgHourly);
+    }
+
+    if (document.getElementById('runway')) {
+        document.getElementById('runway').textContent = (runway === Infinity ? '∞ days' : runway + ' days');
+        document.getElementById('runway').className = 'text-3xl font-bold mt-2 ' + (runway >= this.settings.minRunway ? 'text-green-600' : 'text-red-600');
+    }
+}
+
+renderMonthlyStats() {
+    if (!document.getElementById('month-net')) return;
+
+    const monthNet = this.calculateMonthNet();
+    const monthAvg = this.calculateAvgHourly(30);
+    const dayStats = this.getBestWorstDays();
+
+    document.getElementById('month-net').textContent = this.formatCurrency(monthNet);
+    document.getElementById('month-net').className = 'text-3xl font-bold mt-2 ' + (monthNet >= 0 ? 'text-green-600' : 'text-red-600');
+
+    document.getElementById('month-avg').textContent = this.formatCurrency(monthAvg);
+
+    if (dayStats.best) {
+        document.getElementById('best-day').textContent = dayStats.best.name + ' (' + this.formatCurrency(dayStats.best.avgRate) + '/hr)';
+    } else {
+        document.getElementById('best-day').textContent = 'Need more data';
+    }
+
+    if (dayStats.worst) {
+        document.getElementById('worst-day').textContent = dayStats.worst.name + ' (' + this.formatCurrency(dayStats.worst.avgRate) + '/hr)';
+    } else {
+        document.getElementById('worst-day').textContent = 'Need more data';
+    }
+}
+
+renderBillsOverview() {
+    if (!document.getElementById('bills-total')) return;
+
+    const monthlyTotal = this.calculateMonthlyBills();
+    const upcoming = this.getUpcomingBills(7);
+    const balance = this.calculateCurrentBalance();
+    const billsCovered = balance >= monthlyTotal;
+
+    document.getElementById('bills-total').textContent = this.formatCurrency(monthlyTotal);
+
+    if (upcoming.length > 0) {
+        const next = upcoming[0];
+        const daysUntil = Math.ceil((next.dueDate - new Date()) / (1000 * 60 * 60 * 24));
+        document.getElementById('next-bill').textContent = next.name + ' - ' + this.formatCurrency(next.amount) + ' (' + daysUntil + ' days)';
+    } else {
+        document.getElementById('next-bill').textContent = 'No bills due soon';
+    }
+
+    document.getElementById('bills-covered').textContent = billsCovered ? '✅ Covered' : '❌ Short';
+    document.getElementById('bills-covered').className =
+        `text - 2xl font - bold ${billsCovered ? 'text-green-600' : 'text-red-600'} `;
+}
+
+renderBudgetOverview() {
+    const budgetStatus = this.calculateBudgetStatus();
+    const billsCoverage = this.checkBillsCoverage();
+
+    // Smart Summary Card
+    const summaryContainer = document.getElementById('budget-summary');
+    if (summaryContainer) {
+        const categories = Object.entries(budgetStatus);
+        const redCategories = categories.filter(([_, s]) => s.percent >= 100);
+        const yellowCategories = categories.filter(([_, s]) => s.percent >= 80 && s.percent < 100);
+        const greenCategories = categories.filter(([_, s]) => s.percent < 80);
+
+        let summaryStatus, summaryIcon, summaryText, summaryBg, summaryBorder, summaryTextColor;
+
+        if (!billsCoverage.covered) {
+            summaryStatus = 'critical';
+            summaryIcon = '🚨';
+            summaryText = `Bills not covered — Need ${this.formatCurrency(billsCoverage.shortfall)} more.Fun spending locked.`;
+            summaryBg = 'bg-red-50';
+            summaryBorder = 'border-red-300';
+            summaryTextColor = 'text-red-800';
+        } else if (redCategories.length > 0) {
+            const cat = redCategories[0][0];
+            summaryStatus = 'over';
+            summaryIcon = '🔴';
+            summaryText = (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' budget blown — Work recommended';
+            summaryBg = 'bg-red-50';
+            summaryBorder = 'border-red-300';
+            summaryTextColor = 'text-red-800';
+        } else if (yellowCategories.length > 0) {
+            const cat = yellowCategories[0][0];
+            const pct = Math.round(yellowCategories[0][1].percent);
+            summaryStatus = 'warning';
+            summaryIcon = '🟡';
+            summaryText = (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' at ' + pct + '% — Chill on spending';
+            summaryBg = 'bg-yellow-50';
+            summaryBorder = 'border-yellow-300';
+            summaryTextColor = 'text-yellow-800';
         } else {
-            document.getElementById('best-day').textContent = 'Need more data';
+            const maxRemaining = Math.max(...categories.map(([_, s]) => s.remaining));
+            const maxCat = categories.find(([_, s]) => s.remaining === maxRemaining);
+            summaryStatus = 'good';
+            summaryIcon = '🟢';
+            summaryText = 'Budget healthy — ' + this.formatCurrency(maxRemaining) + ' ' + maxCat[0] + ' left';
+            summaryBg = 'bg-green-50';
+            summaryBorder = 'border-green-300';
+            summaryTextColor = 'text-green-800';
         }
 
-        if (dayStats.worst) {
-            document.getElementById('worst-day').textContent = dayStats.worst.name + ' (' + this.formatCurrency(dayStats.worst.avgRate) + '/hr)';
-        } else {
-            document.getElementById('worst-day').textContent = 'Need more data';
-        }
+        summaryContainer.innerHTML =
+            '<div class="flex items-center ' + summaryBg + ' ' + summaryBorder + ' ' + summaryTextColor + '">' +
+            '<span class="text-3xl mr-3">' + summaryIcon + '</span>' +
+            '<div class="flex-1">' +
+            '<div class="font-bold text-lg">' + summaryText + '</div>' +
+            '</div>' +
+            '</div>';
+        summaryContainer.className = 'mb-4 p-4 rounded-lg border-2 ' + summaryBg + ' ' + summaryBorder;
     }
 
-    renderBillsOverview() {
-        if (!document.getElementById('bills-total')) return;
+    // Category Breakdown with Progress Bars
+    const container = document.getElementById('budget-overview');
+    if (!container) return;
 
-        const monthlyTotal = this.calculateMonthlyBills();
-        const upcoming = this.getUpcomingBills(7);
-        const balance = this.calculateCurrentBalance();
-        const billsCovered = balance >= monthlyTotal;
+    container.innerHTML = Object.entries(budgetStatus).map(([category, status]) => {
+        let colorClass = 'bg-green-500';
+        let bgClass = 'bg-green-50 border-green-200';
 
-        document.getElementById('bills-total').textContent = this.formatCurrency(monthlyTotal);
-
-        if (upcoming.length > 0) {
-            const next = upcoming[0];
-            const daysUntil = Math.ceil((next.dueDate - new Date()) / (1000 * 60 * 60 * 24));
-            document.getElementById('next-bill').textContent = next.name + ' - ' + this.formatCurrency(next.amount) + ' (' + daysUntil + ' days)';
-        } else {
-            document.getElementById('next-bill').textContent = 'No bills due soon';
+        if (status.color === 'yellow') {
+            colorClass = 'bg-yellow-500';
+            bgClass = 'bg-yellow-50 border-yellow-200';
+        } else if (status.color === 'red') {
+            colorClass = 'bg-red-500';
+            bgClass = 'bg-red-50 border-red-200';
         }
 
-        document.getElementById('bills-covered').textContent = billsCovered ? '✅ Covered' : '❌ Short';
-        document.getElementById('bills-covered').className =
-            `text - 2xl font - bold ${ billsCovered ? 'text-green-600' : 'text-red-600' } `;
+        // Check lock status
+        const locked = status.percent >= 100 && !billsCoverage.covered;
+
+        return '<div class="p-4 rounded-lg border-2 mb-4 ' + bgClass + '">' +
+            '<div class="flex justify-between items-center mb-2">' +
+            '<h3 class="font-bold capitaliz">' + category + '</h3>' +
+            '<span class="text-sm font-bold ' + (status.percent >= 100 ? 'text-red-600' : 'text-gray-600') + '">' +
+            Math.round(status.percent) + '%' +
+            '</span>' +
+            '</div>' +
+
+            '<div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">' +
+            '<div class="' + colorClass + ' h-2.5 rounded-full" style="width: ' + Math.min(status.percent, 100) + '%"></div>' +
+            '</div>' +
+
+            '<div class="text-sm text-gray-700 mb-1">' +
+            this.formatCurrency(status.spent) + ' / ' + this.formatCurrency(status.limit) +
+            '</div>' +
+
+            '<div class="text-lg font-bold ' + (status.remaining > 0 ? 'text-green-600' : 'text-red-600') + '">' +
+            'Remaining: ' + this.formatCurrency(Math.max(status.remaining, 0)) +
+            '</div>' +
+
+            (locked ? '<div class="text-xs text-red-600 font-bold mt-2">🔒 LOCKED - Bills not covered</div>' : '') +
+            '</div>';
+    }).join('');
+}
+
+renderProgress() {
+    if (!document.getElementById('progress-current')) return;
+
+    const weekNet = this.calculateWeekNet();
+    const weeklyTarget = this.settings.weeklyTarget;
+    const percent = weeklyTarget > 0 ? Math.min((weekNet / weeklyTarget) * 100, 100) : 0;
+
+    document.getElementById('progress-current').textContent = this.formatCurrency(weekNet);
+    document.getElementById('progress-target').textContent = this.formatCurrency(weeklyTarget);
+    document.getElementById('progress-percent').textContent = Math.round(percent) + '%';
+    document.getElementById('progress-bar').style.width = percent + '%';
+
+    const progressBar = document.getElementById('progress-bar');
+    if (percent >= 100) {
+        progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-green';
+    } else if (percent >= 70) {
+        progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-bg';
+    } else if (percent >= 40) {
+        progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-yellow';
+    } else {
+        progressBar.className = 'h-4 rounded-full transition-all duration-500 bg-red-400';
     }
 
-    renderBudgetOverview() {
-        const budgetStatus = this.calculateBudgetStatus();
-        const billsCoverage = this.checkBillsCoverage();
+    const statusEl = document.getElementById('progress-status');
+    if (weeklyTarget === 0) {
+        statusEl.textContent = 'Set your weekly target in Settings';
+        statusEl.className = 'text-sm text-gray-600 mt-2';
+    } else if (percent >= 100) {
+        statusEl.textContent = '🎉 Weekly target achieved! You\'re crushing it!';
+        statusEl.className = 'text-sm text-green-600 font-medium mt-2';
+    } else if (percent >= 70) {
+        statusEl.textContent = '💪 ' + Math.round(100 - percent) + '% to go - almost there!';
+        statusEl.className = 'text-sm text-purple-600 mt-2';
+    } else {
+        const remaining = weeklyTarget - weekNet;
+        statusEl.textContent = this.formatCurrency(remaining) + ' more needed this week';
+        statusEl.className = 'text-sm text-gray-600 mt-2';
+    }
+}
 
-        // Smart Summary Card
-        const summaryContainer = document.getElementById('budget-summary');
-        if (summaryContainer) {
-            const categories = Object.entries(budgetStatus);
-            const redCategories = categories.filter(([_, s]) => s.percent >= 100);
-            const yellowCategories = categories.filter(([_, s]) => s.percent >= 80 && s.percent < 100);
-            const greenCategories = categories.filter(([_, s]) => s.percent < 80);
+renderDecision() {
+    if (!document.getElementById('decision-icon')) return;
 
-            let summaryStatus, summaryIcon, summaryText, summaryBg, summaryBorder, summaryTextColor;
+    const decision = this.getDecision();
 
-            if (!billsCoverage.covered) {
-                summaryStatus = 'critical';
-                summaryIcon = '🚨';
-                summaryText = `Bills not covered — Need ${ this.formatCurrency(billsCoverage.shortfall) } more.Fun spending locked.`;
-                summaryBg = 'bg-red-50';
-                summaryBorder = 'border-red-300';
-                summaryTextColor = 'text-red-800';
-            } else if (redCategories.length > 0) {
-                const cat = redCategories[0][0];
-                summaryStatus = 'over';
-                summaryIcon = '🔴';
-                summaryText = (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' budget blown — Work recommended';
-                summaryBg = 'bg-red-50';
-                summaryBorder = 'border-red-300';
-                summaryTextColor = 'text-red-800';
-            } else if (yellowCategories.length > 0) {
-                const cat = yellowCategories[0][0];
-                const pct = Math.round(yellowCategories[0][1].percent);
-                summaryStatus = 'warning';
-                summaryIcon = '🟡';
-                summaryText = (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' at ' + pct + '% — Chill on spending';
-                summaryBg = 'bg-yellow-50';
-                summaryBorder = 'border-yellow-300';
-                summaryTextColor = 'text-yellow-800';
-            } else {
-                const maxRemaining = Math.max(...categories.map(([_, s]) => s.remaining));
-                const maxCat = categories.find(([_, s]) => s.remaining === maxRemaining);
-                summaryStatus = 'good';
-                summaryIcon = '🟢';
-                summaryText = 'Budget healthy — ' + this.formatCurrency(maxRemaining) + ' ' + maxCat[0] + ' left';
-                summaryBg = 'bg-green-50';
-                summaryBorder = 'border-green-300';
-                summaryTextColor = 'text-green-800';
-            }
+    document.getElementById('decision-icon').textContent = decision.icon;
+    document.getElementById('decision-text').textContent = decision.status;
+    document.getElementById('decision-text').className = 'text-4xl font-bold ' + decision.color;
 
-            summaryContainer.innerHTML =
-                '<div class="flex items-center ' + summaryBg + ' ' + summaryBorder + ' ' + summaryTextColor + '">' +
-                '<span class="text-3xl mr-3">' + summaryIcon + '</span>' +
-                '<div class="flex-1">' +
-                '<div class="font-bold text-lg">' + summaryText + '</div>' +
-                '</div>' +
-                '</div>';
-            summaryContainer.className = 'mb-4 p-4 rounded-lg border-2 ' + summaryBg + ' ' + summaryBorder;
-        }
+    const mainReason = decision.reasons.length > 0 ? decision.reasons[0] : 'All systems normal';
+    document.getElementById('decision-reason').textContent = mainReason.replace(/^[^\s]+\s/, '');
 
-        // Category Breakdown with Progress Bars
-        const container = document.getElementById('budget-overview');
-        if (!container) return;
-
-        container.innerHTML = Object.entries(budgetStatus).map(([category, status]) => {
-            let colorClass = 'bg-green-500';
-            let bgClass = 'bg-green-50 border-green-200';
-            
-            if (status.color === 'yellow') {
-                colorClass = 'bg-yellow-500';
-                bgClass = 'bg-yellow-50 border-yellow-200';
-            } else if (status.color === 'red') {
-                colorClass = 'bg-red-500';
-                bgClass = 'bg-red-50 border-red-200';
-            }
-
-            // Check lock status
-            const locked = status.percent >= 100 && !billsCoverage.covered;
-
-            return '<div class="p-4 rounded-lg border-2 mb-4 ' + bgClass + '">' +
-                   '<div class="flex justify-between items-center mb-2">' +
-                   '<h3 class="font-bold capitaliz">' + category + '</h3>' +
-                   '<span class="text-sm font-bold ' + (status.percent >= 100 ? 'text-red-600' : 'text-gray-600') + '">' +
-                   Math.round(status.percent) + '%' +
-                   '</span>' +
-                   '</div>' +
-                   
-                   '<div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">' +
-                   '<div class="' + colorClass + ' h-2.5 rounded-full" style="width: ' + Math.min(status.percent, 100) + '%"></div>' +
-                   '</div>' +
-                   
-                   '<div class="text-sm text-gray-700 mb-1">' +
-                   this.formatCurrency(status.spent) + ' / ' + this.formatCurrency(status.limit) +
-                   '</div>' +
-                   
-                   '<div class="text-lg font-bold ' + (status.remaining > 0 ? 'text-green-600' : 'text-red-600') + '">' +
-                   'Remaining: ' + this.formatCurrency(Math.max(status.remaining, 0)) +
-                   '</div>' +
-                   
-                   (locked ? '<div class="text-xs text-red-600 font-bold mt-2">🔒 LOCKED - Bills not covered</div>' : '') +
-                   '</div>';
-        }).join('');
+    const detailsContainer = document.getElementById('decision-details');
+    if (decision.reasons.length > 0) {
+        detailsContainer.innerHTML = '<div class="font-medium mb-2">Analysis:</div>' +
+            decision.reasons.map(r => '<div class="py-1">• ' + r + '</div>').join('');
+    } else {
+        detailsContainer.innerHTML = '<div class="text-gray-500">No data yet - add some entries!</div>';
     }
 
-    renderProgress() {
-        if (!document.getElementById('progress-current')) return;
-
-        const weekNet = this.calculateWeekNet();
-        const weeklyTarget = this.settings.weeklyTarget;
-        const percent = weeklyTarget > 0 ? Math.min((weekNet / weeklyTarget) * 100, 100) : 0;
-
-        document.getElementById('progress-current').textContent = this.formatCurrency(weekNet);
-        document.getElementById('progress-target').textContent = this.formatCurrency(weeklyTarget);
-        document.getElementById('progress-percent').textContent = Math.round(percent) + '%';
-        document.getElementById('progress-bar').style.width = percent + '%';
-
-        const progressBar = document.getElementById('progress-bar');
-        if (percent >= 100) {
-            progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-green';
-        } else if (percent >= 70) {
-            progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-bg';
-        } else if (percent >= 40) {
-            progressBar.className = 'h-4 rounded-full transition-all duration-500 gradient-yellow';
-        } else {
-            progressBar.className = 'h-4 rounded-full transition-all duration-500 bg-red-400';
-        }
-
-        const statusEl = document.getElementById('progress-status');
-        if (weeklyTarget === 0) {
-            statusEl.textContent = 'Set your weekly target in Settings';
-            statusEl.className = 'text-sm text-gray-600 mt-2';
-        } else if (percent >= 100) {
-            statusEl.textContent = '🎉 Weekly target achieved! You\'re crushing it!';
-            statusEl.className = 'text-sm text-green-600 font-medium mt-2';
-        } else if (percent >= 70) {
-            statusEl.textContent = '💪 ' + Math.round(100 - percent) + '% to go - almost there!';
-            statusEl.className = 'text-sm text-purple-600 mt-2';
-        } else {
-            const remaining = weeklyTarget - weekNet;
-            statusEl.textContent = this.formatCurrency(remaining) + ' more needed this week';
-            statusEl.className = 'text-sm text-gray-600 mt-2';
-        }
+    const indicator = document.getElementById('decision-indicator');
+    if (indicator) {
+        indicator.className = 'decision-card rounded-2xl shadow-xl p-8 text-center mb-6 ' + decision.bgColor;
     }
+}
 
-    renderDecision() {
-        if (!document.getElementById('decision-icon')) return;
+renderShiftIntelligence() {
+    const container = document.getElementById('shift-intelligence');
+    if (!container) return;
 
-        const decision = this.getDecision();
+    const intelligence = this.getShiftIntelligence();
 
-        document.getElementById('decision-icon').textContent = decision.icon;
-        document.getElementById('decision-text').textContent = decision.status;
-        document.getElementById('decision-text').className = 'text-4xl font-bold ' + decision.color;
-
-        const mainReason = decision.reasons.length > 0 ? decision.reasons[0] : 'All systems normal';
-        document.getElementById('decision-reason').textContent = mainReason.replace(/^[^\s]+\s/, '');
-
-        const detailsContainer = document.getElementById('decision-details');
-        if (decision.reasons.length > 0) {
-            detailsContainer.innerHTML = '<div class="font-medium mb-2">Analysis:</div>' +
-                decision.reasons.map(r => '<div class="py-1">• ' + r + '</div>').join('');
-        } else {
-            detailsContainer.innerHTML = '<div class="text-gray-500">No data yet - add some entries!</div>';
-        }
-
-        const indicator = document.getElementById('decision-indicator');
-        if (indicator) {
-            indicator.className = 'decision-card rounded-2xl shadow-xl p-8 text-center mb-6 ' + decision.bgColor;
-        }
+    if (!intelligence.best) {
+        container.innerHTML = '<div class="text-gray-500 text-center py-4">Add more DoorDash entries to see shift analysis</div>';
+        return;
     }
-
-    renderShiftIntelligence() {
-        const container = document.getElementById('shift-intelligence');
-        if (!container) return;
-
-        const intelligence = this.getShiftIntelligence();
-
-        if (!intelligence.best) {
-            container.innerHTML = '<div class="text-gray-500 text-center py-4">Add more DoorDash entries to see shift analysis</div>';
-            return;
-        }
 
             </div >
 
-    ${intelligence.all.length > 2 ? `
+        ${
+            intelligence.all.length > 2 ? `
             <div class="mt-4">
                 <div class="text-sm font-medium text-gray-700 mb-2">All Shifts (sorted by $/hr)</div>
                 <div class="space-y-1">
@@ -1252,7 +1235,7 @@ class FinanceTracker {
             </div>
             ` : ''
     }
-`;
+    `;
     }
 
 renderChart() {
