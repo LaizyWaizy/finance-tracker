@@ -194,25 +194,27 @@ class FinanceTracker {
     }
 
     saveEntries() {
-        localStorage.setItem('financeEntries', JSON.stringify(this.entries));
+        this.saveToCloud();
     }
 
     loadBills() {
+        // Legacy load, ignored if cloud works, but kept for safety
         const stored = localStorage.getItem('financeBills');
         return stored ? JSON.parse(stored) : [];
     }
 
     saveBills() {
-        localStorage.setItem('financeBills', JSON.stringify(this.bills));
+        this.saveToCloud();
     }
 
     loadSpending() {
+        // Legacy load
         const stored = localStorage.getItem('financeSpending');
         return stored ? JSON.parse(stored) : [];
     }
 
     saveSpending() {
-        localStorage.setItem('financeSpending', JSON.stringify(this.spending));
+        this.saveToCloud();
     }
 
     loadSettings() {
