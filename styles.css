@@ -1,0 +1,88 @@
+/* Finance Tracker v2.0 - Shared Styles */
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Gradients */
+.gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-green {
+    background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+}
+
+.gradient-yellow {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* Navigation */
+.nav-link {
+    display: inline-block;
+    padding: 1rem 1.5rem;
+    color: #4b5563;
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.nav-link:hover {
+    color: #667eea;
+    background-color: #f9fafb;
+}
+
+.nav-link.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background-color: #f9fafb;
+}
+
+/* Cards */
+.stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.action-card {
+    display: block;
+    text-decoration: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.action-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Decision Card Animation */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
+    }
+}
+
+.decision-card {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Chart */
+.chart-bar {
+    transition: height 0.3s ease;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+    }
+}

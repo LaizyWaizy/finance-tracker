@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Finance Tracker v2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold">💰 Finance Tracker v2.0</h1>
+            <p class="text-purple-100 mt-1">Analytics & Insights</p>
+        </div>
+    </header>
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex overflow-x-auto">
+                <a href="index.html" class="nav-link">📊 Dashboard</a>
+                <a href="income.html" class="nav-link">➕ Income</a>
+                <a href="bills.html" class="nav-link">📋 Bills</a>
+                <a href="budget.html" class="nav-link">💸 Budget</a>
+                <a href="analytics.html" class="nav-link active">📈 Analytics</a>
+                <a href="planner.html" class="nav-link">🔮 Planner</a>
+                <a href="settings.html" class="nav-link">⚙️ Settings</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-6 max-w-6xl">
+
+        <!-- Monthly Stats -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">📅 Monthly Performance</h2>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="stat-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md p-4">
+                    <div class="text-blue-700 text-sm font-medium">This Month Net</div>
+                    <div id="month-net" class="text-3xl font-bold text-blue-900 mt-2">$0</div>
+                </div>
+
+                <div class="stat-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md p-4">
+                    <div class="text-blue-700 text-sm font-medium">Monthly Avg $/Hr</div>
+                    <div id="month-avg" class="text-3xl font-bold text-blue-900 mt-2">$0</div>
+                </div>
+
+                <div class="stat-card bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md p-4">
+                    <div class="text-green-700 text-sm font-medium">Best Day</div>
+                    <div id="best-day" class="text-lg font-bold text-green-900 mt-2">-</div>
+                </div>
+
+                <div class="stat-card bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-md p-4">
+                    <div class="text-red-700 text-sm font-medium">Worst Day</div>
+                    <div id="worst-day" class="text-lg font-bold text-red-900 mt-2">-</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shift Intelligence -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">🎯 Shift Intelligence</h2>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div id="shift-intelligence">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Weekly Chart -->
+        <section>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">📈 Weekly Income</h2>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div id="weekly-chart" class="flex items-end justify-between h-48 gap-2">
+                    <!-- Chart bars -->
+                </div>
+                <div id="chart-labels" class="flex justify-between mt-2 text-xs text-gray-500">
+                    <!-- Labels -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-gray-300 mt-12 py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p>Built with 💜 - Your Personal Financial Operating System</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>

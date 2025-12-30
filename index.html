@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Finance Tracker v2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold">💰 Finance Tracker v2.0</h1>
+            <p class="text-purple-100 mt-1">Your Personal Financial Operating System</p>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex overflow-x-auto">
+                <a href="index.html" class="nav-link active">📊 Dashboard</a>
+                <a href="income.html" class="nav-link">➕ Income</a>
+                <a href="bills.html" class="nav-link">📋 Bills</a>
+                <a href="budget.html" class="nav-link">💸 Budget</a>
+                <a href="analytics.html" class="nav-link">📈 Analytics</a>
+                <a href="planner.html" class="nav-link">🔮 Planner</a>
+                <a href="settings.html" class="nav-link">⚙️ Settings</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-4 py-6 max-w-6xl">
+
+        <!-- Quick Stats -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">📊 Your Situation</h2>
+
+            <!-- Primary Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card bg-white rounded-xl shadow-md p-4">
+                    <div class="text-gray-500 text-sm font-medium">Current Balance</div>
+                    <div id="current-balance" class="text-3xl font-bold text-gray-800 mt-2">$0</div>
+                </div>
+
+                <div class="stat-card bg-white rounded-xl shadow-md p-4">
+                    <div class="text-gray-500 text-sm font-medium">This Week Net</div>
+                    <div id="week-net" class="text-3xl font-bold text-gray-800 mt-2">$0</div>
+                </div>
+
+                <div class="stat-card bg-white rounded-xl shadow-md p-4">
+                    <div class="text-gray-500 text-sm font-medium">Avg $/Hour</div>
+                    <div id="avg-hourly" class="text-3xl font-bold text-gray-800 mt-2">$0</div>
+                </div>
+
+                <div class="stat-card bg-white rounded-xl shadow-md p-4">
+                    <div class="text-gray-500 text-sm font-medium">Runway</div>
+                    <div id="runway" class="text-3xl font-bold text-gray-800 mt-2">∞ days</div>
+                </div>
+            </div>
+
+            <!-- Bills Overview -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">📋 Bills Overview</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <div class="text-sm text-gray-600">Monthly Bills Total</div>
+                        <div id="bills-total" class="text-2xl font-bold text-gray-800">$0</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Next Bill Due</div>
+                        <div id="next-bill" class="text-sm font-medium text-gray-800">-</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Bills Covered?</div>
+                        <div id="bills-covered" class="text-2xl font-bold">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Overview -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">💸 Budget Status</h3>
+                <div id="budget-overview" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Weekly Progress -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-3">🎯 Weekly Progress</h3>
+                <div class="flex items-end justify-between mb-2">
+                    <div>
+                        <span id="progress-current" class="text-3xl font-bold text-purple-600">$0</span>
+                        <span class="text-gray-400 text-xl"> / </span>
+                        <span id="progress-target" class="text-2xl font-medium text-gray-600">$0</span>
+                    </div>
+                    <div id="progress-percent" class="text-2xl font-bold text-purple-600">0%</div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div id="progress-bar" class="h-4 rounded-full transition-all duration-500 gradient-bg"
+                        style="width: 0%"></div>
+                </div>
+                <div id="progress-status" class="text-sm text-gray-600 mt-2">Set your weekly target in Settings</div>
+            </div>
+        </section>
+
+        <!-- Decision Indicator -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">🎯 Decision</h2>
+
+            <div id="decision-indicator" class="decision-card bg-white rounded-2xl shadow-xl p-8 text-center mb-6">
+                <div id="decision-icon" class="text-6xl mb-4">🟡</div>
+                <div id="decision-text" class="text-4xl font-bold text-gray-800">OPTIONAL</div>
+                <div id="decision-reason" class="text-gray-600 mt-2">Calculating...</div>
+                <div id="decision-details" class="mt-4 text-left bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+                    <!-- Detailed reasons -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Weekly Chart -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">📈 This Week</h2>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div id="weekly-chart" class="flex items-end justify-between h-48 gap-2">
+                    <!-- Chart bars -->
+                </div>
+                <div id="chart-labels" class="flex justify-between mt-2 text-xs text-gray-500">
+                    <!-- Labels -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">⚡ Quick Actions</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="income.html"
+                    class="action-card gradient-bg text-white rounded-xl shadow-md p-6 hover:opacity-90 transition-opacity">
+                    <div class="text-4xl mb-2">➕</div>
+                    <div class="text-xl font-bold">Add Income</div>
+                    <div class="text-sm text-purple-100 mt-1">Log a new entry</div>
+                </a>
+
+                <a href="budget.html"
+                    class="action-card bg-red-500 text-white rounded-xl shadow-md p-6 hover:opacity-90 transition-opacity">
+                    <div class="text-4xl mb-2">💸</div>
+                    <div class="text-xl font-bold">Log Spending</div>
+                    <div class="text-sm text-red-100 mt-1">Track expenses</div>
+                </a>
+
+                <a href="planner.html"
+                    class="action-card bg-blue-500 text-white rounded-xl shadow-md p-6 hover:opacity-90 transition-opacity">
+                    <div class="text-4xl mb-2">🔮</div>
+                    <div class="text-xl font-bold">Plan Work</div>
+                    <div class="text-sm text-blue-100 mt-1">Predict outcomes</div>
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 mt-12 py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p>Built with 💜 - Your Personal Financial Operating System</p>
+            <p class="text-sm text-gray-500 mt-1">v2.0 - Complete Control</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>

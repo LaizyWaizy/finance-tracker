@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .status {
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #log {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔥 Firebase Connection Test</h1>
+
+    <div id="status" class="status waiting">
+        ⏳ Initializing Firebase...
+    </div>
+
+    <div>
+        <button onclick="testSave()">Test Save</button>
+        <button onclick="testLoad()">Test Load</button>
+        <button onclick="clearTest()">Clear Test Data</button>
+    </div>
+
+    <div id="log"></div>
+
+    <script type="module">
+        import { saveToFirebase, loadFromFirebase, auth } from './firebase-config.js';
+
+        const statusEl = document.getElementById('status');
+        const logEl = document.getElementById('log');
+
+        function log(message) {
+            const time = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${time}] ${message}<br>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Wait for auth
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ Firebase Connected! User ID: ' + user.uid;
+                log('✅ Firebase authentication successful');
+                log('User ID: ' + user.uid);
+            } else {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Firebase connection failed';
+                log('❌ Authentication failed');
+            }
+        });
+
+        // Test functions
+        window.testSave = async function () {
+            log('📤 Testing save...');
+            const testData = {
+                message: 'Hello from Finance Tracker!',
+                timestamp: new Date().toISOString(),
+                random: Math.random()
+            };
+
+            try {
+                await saveToFirebase('test', testData);
+                log('✅ Save successful!');
+                log('Data: ' + JSON.stringify(testData, null, 2));
+            } catch (error) {
+                log('❌ Save failed: ' + error.message);
+            }
+        };
+
+        window.testLoad = async function () {
+            log('📥 Testing load...');
+
+            try {
+                const data = await loadFromFirebase('test');
+                if (data) {
+                    log('✅ Load successful!');
+                    log('Data: ' + JSON.stringify(data, null, 2));
+                } else {
+                    log('ℹ️ No test data found. Try saving first.');
+                }
+            } catch (error) {
+                log('❌ Load failed: ' + error.message);
+            }
+        };
+
+        window.clearTest = function () {
+            logEl.innerHTML = '';
+            log('🗑️ Log cleared');
+        };
+
+        log('🚀 Test page loaded');
+        log('Waiting for Firebase authentication...');
+    </script>
+</body>
+
+</html>
