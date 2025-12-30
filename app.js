@@ -821,23 +821,33 @@ class FinanceTracker {
         const avgHourly = this.calculateAvgHourly();
         const runway = this.calculateRunway();
 
-        document.getElementById('current-balance').textContent = this.formatCurrency(balance);
-        document.getElementById('current-balance').className =
-            `text-3xl font-bold mt-2 ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`;
+        if (document.getElementById('current-balance')) {
+            document.getElementById('current-balance').textContent = this.formatCurrency(balance);
+            document.getElementById('current-balance').className =
+                `text-3xl font-bold mt-2 ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`;
+        }
 
-        document.getElementById('week-net').textContent = this.formatCurrency(weekNet);
-        document.getElementById('week-net').className =
-            `text-3xl font-bold mt-2 ${weekNet >= 0 ? 'text-green-600' : 'text-red-600'}`;
+        if (document.getElementById('week-net')) {
+            document.getElementById('week-net').textContent = this.formatCurrency(weekNet);
+            document.getElementById('week-net').className =
+                `text-3xl font-bold mt-2 ${weekNet >= 0 ? 'text-green-600' : 'text-red-600'}`;
+        }
 
-        document.getElementById('avg-hourly').textContent = this.formatCurrency(avgHourly);
+        if (document.getElementById('avg-hourly')) {
+            document.getElementById('avg-hourly').textContent = this.formatCurrency(avgHourly);
+        }
 
-        document.getElementById('runway').textContent =
-            runway === Infinity ? '∞ days' : `${runway} days`;
-        document.getElementById('runway').className =
-            `text-3xl font-bold mt-2 ${runway >= this.settings.minRunway ? 'text-green-600' : 'text-red-600'}`;
+        if (document.getElementById('runway')) {
+            document.getElementById('runway').textContent =
+                runway === Infinity ? '∞ days' : `${runway} days`;
+            document.getElementById('runway').className =
+                `text-3xl font-bold mt-2 ${runway >= this.settings.minRunway ? 'text-green-600' : 'text-red-600'}`;
+        }
     }
 
     renderMonthlyStats() {
+        if (!document.getElementById('month-net')) return;
+
         const monthNet = this.calculateMonthNet();
         const monthAvg = this.calculateAvgHourly(30);
         const dayStats = this.getBestWorstDays();
@@ -862,6 +872,8 @@ class FinanceTracker {
     }
 
     renderBillsOverview() {
+        if (!document.getElementById('bills-total')) return;
+
         const monthlyTotal = this.calculateMonthlyBills();
         const upcoming = this.getUpcomingBills(7);
         const balance = this.calculateCurrentBalance();
@@ -992,6 +1004,8 @@ class FinanceTracker {
     }
 
     renderProgress() {
+        if (!document.getElementById('progress-current')) return;
+
         const weekNet = this.calculateWeekNet();
         const weeklyTarget = this.settings.weeklyTarget;
         const percent = weeklyTarget > 0 ? Math.min((weekNet / weeklyTarget) * 100, 100) : 0;
@@ -1030,6 +1044,8 @@ class FinanceTracker {
     }
 
     renderDecision() {
+        if (!document.getElementById('decision-icon')) return;
+
         const decision = this.getDecision();
 
         document.getElementById('decision-icon').textContent = decision.icon;
@@ -1048,12 +1064,16 @@ class FinanceTracker {
         }
 
         const indicator = document.getElementById('decision-indicator');
-        indicator.className = `decision-card rounded-2xl shadow-xl p-8 text-center mb-6 ${decision.bgColor}`;
+        if (indicator) {
+            indicator.className = `decision-card rounded-2xl shadow-xl p-8 text-center mb-6 ${decision.bgColor}`;
+        }
     }
 
     renderShiftIntelligence() {
-        const intelligence = this.getShiftIntelligence();
         const container = document.getElementById('shift-intelligence');
+        if (!container) return;
+
+        const intelligence = this.getShiftIntelligence();
 
         if (!intelligence.best) {
             container.innerHTML = '<div class="text-gray-500 text-center py-4">Add more DoorDash entries to see shift analysis</div>';
@@ -1098,6 +1118,8 @@ class FinanceTracker {
     renderChart() {
         const chartContainer = document.getElementById('weekly-chart');
         const labelsContainer = document.getElementById('chart-labels');
+
+        if (!chartContainer || !labelsContainer) return;
 
         const days = [];
         for (let i = 6; i >= 0; i--) {
@@ -1232,18 +1254,24 @@ class FinanceTracker {
     // ============================================
 
     populateSettings() {
-        document.getElementById('weekly-target').value = this.settings.weeklyTarget;
-        document.getElementById('monthly-target').value = this.settings.monthlyTarget;
-        document.getElementById('target-hourly').value = this.settings.targetHourly;
-        document.getElementById('min-runway').value = this.settings.minRunway;
-        document.getElementById('daily-expenses').value = this.settings.dailyExpenses;
-        document.getElementById('starting-balance').value = this.settings.startingBalance;
+        // Helper function to safely set value
+        const setVal = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value;
+        };
+
+        setVal('weekly-target', this.settings.weeklyTarget);
+        setVal('monthly-target', this.settings.monthlyTarget);
+        setVal('target-hourly', this.settings.targetHourly);
+        setVal('min-runway', this.settings.minRunway);
+        setVal('daily-expenses', this.settings.dailyExpenses);
+        setVal('starting-balance', this.settings.startingBalance);
 
         // Budgets
-        document.getElementById('budget-food').value = this.settings.budgets.food;
-        document.getElementById('budget-gas').value = this.settings.budgets.gas;
-        document.getElementById('budget-fun').value = this.settings.budgets.fun;
-        document.getElementById('budget-misc').value = this.settings.budgets.misc;
+        setVal('budget-food', this.settings.budgets.food);
+        setVal('budget-gas', this.settings.budgets.gas);
+        setVal('budget-fun', this.settings.budgets.fun);
+        setVal('budget-misc', this.settings.budgets.misc);
     }
 
     updateSettings() {
