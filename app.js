@@ -670,6 +670,8 @@ class FinanceTracker {
     }
 
     updateWorkPlanner() {
+        if (!document.getElementById('planner-hours')) return;
+
         const hours = parseFloat(document.getElementById('planner-hours').value) || 0;
         const shiftType = document.getElementById('planner-shift').value;
         const dayOfWeek = document.getElementById('planner-day').value === 'any' ? null : parseInt(document.getElementById('planner-day').value);
