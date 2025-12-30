@@ -647,10 +647,32 @@ class FinanceTracker {
         const upcomingBills = this.getUpcomingBills(30);
         const billsTotal = upcomingBills.reduce((sum, b) => sum + b.amount, 0);
         const safeBalance = balance - billsTotal;
-        const dailyExpenses = this.settings.dailyExpenses;
+        const dailyExpenses = this.settings.dailyExpenses || 50; // Default to 50 if 0
+
+        // 1. If we can't pay bills in next 30 days, runway is effectively 0 (or days until that bill)
+        if (safeBalance < 0) {
+            // Find the first bill that breaks us
+            let current = balance;
+            for (const bill of upcomingBills) {
+                if (current < bill.amount) {
+                    // How many days until this bill?
+                    const today = new Date();
+                    const diffTime = Math.abs(bill.dueDate - today);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    // Note: getUpcomingBills returns date objects in dueDate property? 
+                    // No, getUpcomingBills returns { ...bill, dueDate: DateObject } in my view Step 1190 line 635.
+                    // But wait, line 642 sorts by dueDate. 
+                    // Let's assume bill.dueDate is a Date object.
+
+                    // Actually, simpler: return 0 to indicate panic.
+                    return 0;
+                }
+                current -= bill.amount;
+            }
+            return 0;
+        }
 
         if (dailyExpenses <= 0) return Infinity;
-        if (safeBalance <= 0) return 0;
 
         return Math.floor(safeBalance / dailyExpenses);
     }
@@ -893,6 +915,16 @@ class FinanceTracker {
         let color = 'text-green-600';
         let bgColor = 'bg-green-50';
 
+        // RULE 0: BILLS NOT COVERED = PANIC
+        const billsCoverage = this.checkBillsCoverage();
+        if (!billsCoverage.covered) {
+            status = 'DASH TODAY';
+            icon = '🚨';
+            color = 'text-red-600';
+            bgColor = 'bg-red-50';
+            reasons.push('🚨 Immediate bill due: Need ' + this.formatCurrency(billsCoverage.shortfall));
+        }
+
         // RULE 1: Negative balance = CRITICAL
         if (balance < 0) {
             status = 'DASH TODAY';
@@ -903,13 +935,12 @@ class FinanceTracker {
         }
 
         // RULE 2: Low runway = CRITICAL
-        if (runway < minRunway) {
-            if (status !== 'DASH TODAY') {
-                status = 'DASH TODAY';
-                icon = '❌';
-                color = 'text-red-600';
-                bgColor = 'bg-red-50';
-            }
+        // Only trigger this if we haven't already panicked about bills
+        if (status !== 'DASH TODAY' && runway < minRunway) {
+            status = 'DASH TODAY';
+            icon = '⚠️';
+            color = 'text-red-600';
+            bgColor = 'bg-red-50';
             reasons.push('⚠️ Runway is only ' + runway + ' days (need ' + minRunway + '+)');
         }
 
