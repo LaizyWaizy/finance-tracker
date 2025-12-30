@@ -160,6 +160,7 @@ class FinanceTracker {
             this.showSyncStatus();
         } catch (error) {
             console.error("Cloud save failed:", error);
+            alert("⚠️ SAVE FAILED: " + error.message + "\n\n(Check Firestore Rules in Firebase Console)");
         }
     }
 
