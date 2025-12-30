@@ -19,8 +19,28 @@ class FinanceTracker {
         // Safety Lock: Prevent edits until Cloud Sync is done
         this.showLoading();
 
+        // Setup Logout (Global Listener)
+        this.setupLogout();
+
         // Wait for Auth before doing anything
         this.initAuth();
+    }
+
+    setupLogout() {
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('#logout-btn');
+            if (btn) {
+                if (confirm('Are you sure you want to log out?')) {
+                    signOut(auth).then(() => {
+                        console.log('User signed out');
+                        window.location.href = 'login.html';
+                    }).catch((error) => {
+                        console.error('Sign out error', error);
+                        alert('Logout failed: ' + error.message);
+                    });
+                }
+            }
+        });
     }
 
     showLoading() {
