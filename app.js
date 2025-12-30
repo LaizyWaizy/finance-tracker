@@ -848,7 +848,18 @@ class FinanceTracker {
 
         const prediction = this.predictWorkOutcome(hours, shiftType, dayOfWeek);
 
-                    '<div>' +
+        document.getElementById('planner-results').innerHTML = 
+            '<div class="grid grid-cols-2 gap-4">' +
+                '<div>' +
+                    '<div class="text-sm text-gray-600">Expected Net</div>' +
+                    '<div class="text-2xl font-bold text-purple-600">' + this.formatCurrency(prediction.expectedNet) + '</div>' +
+                    '<div class="text-xs text-gray-500">@ ' + this.formatCurrency(prediction.avgRate) + '/hr</div>' +
+                '</div>' +
+                '<div>' +
+                    '<div class="text-sm text-gray-600">New Balance</div>' +
+                    '<div class="text-2xl font-bold ' + (prediction.newBalance >= 0 ? 'text-green-600' : 'text-red-600') + '">' + this.formatCurrency(prediction.newBalance) + '</div>' +
+                '</div>' +
+                '<div>' +
                     '<div class="text-sm text-gray-600">New Runway</div>' +
                     '<div class="text-2xl font-bold ' + (prediction.newRunway >= this.settings.minRunway ? 'text-green-600' : 'text-red-600') + '">' + prediction.newRunway + ' days</div>' +
                 '</div>' +
@@ -1467,7 +1478,8 @@ showNotification(message) {
         notification.style.transition = 'opacity 0.3s ease';
         setTimeout(() => notification.remove(), 300);
     }, 2000);
-
+}
+}
 
 // ============================================
 // INITIALIZE APP
