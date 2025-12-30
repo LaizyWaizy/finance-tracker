@@ -754,7 +754,7 @@ class FinanceTracker {
         const dashEntries = this.entries.filter(e => e.source === 'DoorDash' && e.hours > 0);
 
         dashEntries.forEach(entry => {
-            const key = `${ entry.shiftType }_${ entry.dayOfWeek } `;
+            const key = entry.shiftType + '_' + entry.dayOfWeek;
             if (!shifts[key]) {
                 shifts[key] = {
                     shiftType: entry.shiftType,
@@ -900,7 +900,7 @@ class FinanceTracker {
             icon = '❌';
             color = 'text-red-600';
             bgColor = 'bg-red-50';
-            reasons.push(`⚠️ Balance is negative(${ this.formatCurrency(balance) })`);
+            reasons.push('⚠️ Balance is negative (' + this.formatCurrency(balance) + ')');
         }
 
         // RULE 2: Low runway = CRITICAL
@@ -911,52 +911,52 @@ class FinanceTracker {
                 color = 'text-red-600';
                 bgColor = 'bg-red-50';
             }
-            reasons.push(`⚠️ Runway is only ${ runway } days(need ${ minRunway } +)`);
+            reasons.push('⚠️ Runway is only ' + runway + ' days (need ' + minRunway + '+)');
         }
 
         // RULE 3: Budget pressure
         const redBudgets = Object.entries(budgetStatus).filter(([_, b]) => b.color === 'red');
-        if (redBudgets.length > 0 && status === 'YOU\'RE GOOD') {
+        if (redBudgets.length > 0 && status === "YOU'RE GOOD") {
             status = 'OPTIONAL';
             icon = '🟡';
             color = 'text-yellow-600';
             bgColor = 'bg-yellow-50';
             redBudgets.forEach(([cat, _]) => {
-                reasons.push(`💸 ${ cat.charAt(0).toUpperCase() + cat.slice(1) } budget critical`);
+                reasons.push('💸 ' + (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' budget critical');
             });
         }
 
         // RULE 4: Weekly target not met
         if (weekNet < weeklyTarget) {
-            if (status === 'YOU\'RE GOOD') {
+            if (status === "YOU'RE GOOD") {
                 status = 'OPTIONAL';
                 icon = '🟡';
                 color = 'text-yellow-600';
                 bgColor = 'bg-yellow-50';
             }
             const remaining = weeklyTarget - weekNet;
-            reasons.push(`📊 Weekly goal not met(${ this.formatCurrency(remaining) } to go)`);
+            reasons.push('📊 Weekly goal not met (' + this.formatCurrency(remaining) + ' to go)');
         }
 
         // Add positive indicators
-        if (status === 'YOU\'RE GOOD') {
-            reasons.push(`✅ Balance is healthy(${ this.formatCurrency(balance) })`);
-            reasons.push(`✅ Runway is ${ runway } days`);
+        if (status === "YOU'RE GOOD") {
+            reasons.push('✅ Balance is healthy (' + this.formatCurrency(balance) + ')');
+            reasons.push('✅ Runway is ' + runway + ' days');
             if (weekNet >= weeklyTarget) {
-                reasons.push(`✅ Weekly target achieved!`);
+                reasons.push('✅ Weekly target achieved!');
             }
             if (monthNet >= monthlyTarget) {
-                reasons.push(`✅ Monthly target achieved!`);
+                reasons.push('✅ Monthly target achieved!');
             }
         }
 
         // If optional, add context
         if (status === 'OPTIONAL') {
             if (balance > 0) {
-                reasons.push(`✓ Balance is positive(${ this.formatCurrency(balance) })`);
+                reasons.push('✓ Balance is positive (' + this.formatCurrency(balance) + ')');
             }
             if (runway >= minRunway) {
-                reasons.push(`✓ Runway is ${ runway } days`);
+                reasons.push('✓ Runway is ' + runway + ' days');
             }
         }
 
@@ -990,14 +990,12 @@ class FinanceTracker {
 
         if (document.getElementById('current-balance')) {
             document.getElementById('current-balance').textContent = this.formatCurrency(balance);
-            document.getElementById('current-balance').className =
-                `text - 3xl font - bold mt - 2 ${ balance >= 0 ? 'text-green-600' : 'text-red-600' } `;
+            document.getElementById('current-balance').className = 'text-3xl font-bold mt-2 ' + (balance >= 0 ? 'text-green-600' : 'text-red-600');
         }
 
         if (document.getElementById('week-net')) {
             document.getElementById('week-net').textContent = this.formatCurrency(weekNet);
-            document.getElementById('week-net').className =
-                `text - 3xl font - bold mt - 2 ${ weekNet >= 0 ? 'text-green-600' : 'text-red-600' } `;
+            document.getElementById('week-net').className = 'text-3xl font-bold mt-2 ' + (weekNet >= 0 ? 'text-green-600' : 'text-red-600');
         }
 
         if (document.getElementById('avg-hourly')) {
@@ -1005,10 +1003,8 @@ class FinanceTracker {
         }
 
         if (document.getElementById('runway')) {
-            document.getElementById('runway').textContent =
-                runway === Infinity ? '∞ days' : `${ runway } days`;
-            document.getElementById('runway').className =
-                `text - 3xl font - bold mt - 2 ${ runway >= this.settings.minRunway ? 'text-green-600' : 'text-red-600' } `;
+            document.getElementById('runway').textContent = (runway === Infinity ? '∞ days' : runway + ' days');
+            document.getElementById('runway').className = 'text-3xl font-bold mt-2 ' + (runway >= this.settings.minRunway ? 'text-green-600' : 'text-red-600');
         }
     }
 
@@ -1020,19 +1016,18 @@ class FinanceTracker {
         const dayStats = this.getBestWorstDays();
 
         document.getElementById('month-net').textContent = this.formatCurrency(monthNet);
-        document.getElementById('month-net').className =
-            `text - 3xl font - bold mt - 2 ${ monthNet >= 0 ? 'text-green-600' : 'text-red-600' } `;
+        document.getElementById('month-net').className = 'text-3xl font-bold mt-2 ' + (monthNet >= 0 ? 'text-green-600' : 'text-red-600');
 
         document.getElementById('month-avg').textContent = this.formatCurrency(monthAvg);
 
         if (dayStats.best) {
-            document.getElementById('best-day').textContent = `${ dayStats.best.name } (${ this.formatCurrency(dayStats.best.avgRate) }/hr)`;
+            document.getElementById('best-day').textContent = dayStats.best.name + ' (' + this.formatCurrency(dayStats.best.avgRate) + '/hr)';
         } else {
             document.getElementById('best-day').textContent = 'Need more data';
         }
 
         if (dayStats.worst) {
-            document.getElementById('worst-day').textContent = `${ dayStats.worst.name } (${ this.formatCurrency(dayStats.worst.avgRate) }/hr)`;
+            document.getElementById('worst-day').textContent = dayStats.worst.name + ' (' + this.formatCurrency(dayStats.worst.avgRate) + '/hr)';
         } else {
             document.getElementById('worst-day').textContent = 'Need more data';
         }
@@ -1051,7 +1046,7 @@ class FinanceTracker {
         if (upcoming.length > 0) {
             const next = upcoming[0];
             const daysUntil = Math.ceil((next.dueDate - new Date()) / (1000 * 60 * 60 * 24));
-            document.getElementById('next-bill').textContent = `${ next.name } - ${ this.formatCurrency(next.amount) } (${ daysUntil } days)`;
+            document.getElementById('next-bill').textContent = next.name + ' - ' + this.formatCurrency(next.amount) + ' (' + daysUntil + ' days)';
         } else {
             document.getElementById('next-bill').textContent = 'No bills due soon';
         }
@@ -1086,7 +1081,7 @@ class FinanceTracker {
                 const cat = redCategories[0][0];
                 summaryStatus = 'over';
                 summaryIcon = '🔴';
-                summaryText = `${ cat.charAt(0).toUpperCase() + cat.slice(1) } budget blown — Work recommended`;
+                summaryText = (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' budget blown — Work recommended';
                 summaryBg = 'bg-red-50';
                 summaryBorder = 'border-red-300';
                 summaryTextColor = 'text-red-800';
@@ -1095,7 +1090,7 @@ class FinanceTracker {
                 const pct = Math.round(yellowCategories[0][1].percent);
                 summaryStatus = 'warning';
                 summaryIcon = '🟡';
-                summaryText = `${ cat.charAt(0).toUpperCase() + cat.slice(1) } at ${ pct }% — Chill on spending`;
+                summaryText = (cat.charAt(0).toUpperCase() + cat.slice(1)) + ' at ' + pct + '% — Chill on spending';
                 summaryBg = 'bg-yellow-50';
                 summaryBorder = 'border-yellow-300';
                 summaryTextColor = 'text-yellow-800';
@@ -1104,21 +1099,20 @@ class FinanceTracker {
                 const maxCat = categories.find(([_, s]) => s.remaining === maxRemaining);
                 summaryStatus = 'good';
                 summaryIcon = '🟢';
-                summaryText = `Budget healthy — ${ this.formatCurrency(maxRemaining) } ${ maxCat[0] } left`;
+                summaryText = 'Budget healthy — ' + this.formatCurrency(maxRemaining) + ' ' + maxCat[0] + ' left';
                 summaryBg = 'bg-green-50';
                 summaryBorder = 'border-green-300';
                 summaryTextColor = 'text-green-800';
             }
 
-            summaryContainer.innerHTML = `
-    < div class="flex items-center ${summaryBg} ${summaryBorder} ${summaryTextColor}" >
-                    <span class="text-3xl mr-3">${summaryIcon}</span>
-                    <div class="flex-1">
-                        <div class="font-bold text-lg">${summaryText}</div>
-                    </div>
-                </div >
-    `;
-            summaryContainer.className = `mb - 4 p - 4 rounded - lg border - 2 ${ summaryBg } ${ summaryBorder } `;
+            summaryContainer.innerHTML =
+                '<div class="flex items-center ' + summaryBg + ' ' + summaryBorder + ' ' + summaryTextColor + '">' +
+                '<span class="text-3xl mr-3">' + summaryIcon + '</span>' +
+                '<div class="flex-1">' +
+                '<div class="font-bold text-lg">' + summaryText + '</div>' +
+                '</div>' +
+                '</div>';
+            summaryContainer.className = 'mb-4 p-4 rounded-lg border-2 ' + summaryBg + ' ' + summaryBorder;
         }
 
         // Category Breakdown with Progress Bars
@@ -1126,47 +1120,42 @@ class FinanceTracker {
         if (!container) return;
 
         container.innerHTML = Object.entries(budgetStatus).map(([category, status]) => {
-            const colorClass = {
-                green: 'bg-green-500',
-                yellow: 'bg-yellow-500',
-                red: 'bg-red-500'
-            }[status.color];
+            let colorClass = 'bg-green-500';
+            let bgClass = 'bg-green-50 border-green-200';
+            
+            if (status.color === 'yellow') {
+                colorClass = 'bg-yellow-500';
+                bgClass = 'bg-yellow-50 border-yellow-200';
+            } else if (status.color === 'red') {
+                colorClass = 'bg-red-500';
+                bgClass = 'bg-red-50 border-red-200';
+            }
 
-            const bgClass = {
-                green: 'bg-green-50 border-green-200',
-                yellow: 'bg-yellow-50 border-yellow-200',
-                red: 'bg-red-50 border-red-200'
-            }[status.color];
+            // Check lock status
+            const locked = status.percent >= 100 && !billsCoverage.covered;
 
-            const warningIcon = status.percent >= 90 ? '⚠️' : '';
-            const locked = !billsCoverage.covered && category === 'fun';
-
-            return `
-    < div class="p-4 rounded-lg border-2 ${bgClass} ${locked ? 'opacity-60' : ''}" >
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-bold capitalize text-gray-800">${category}</span>
-                        <span class="text-sm font-medium text-gray-700">${Math.round(status.percent)}% ${warningIcon}</span>
-                    </div>
-                    
-                    <!--Progress Bar-- >
-                    <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
-                        <div class="${colorClass} h-3 rounded-full transition-all duration-500" 
-                             style="width: ${Math.min(status.percent, 100)}%"></div>
-                    </div>
-                    
-                    <!--Spent / Limit-- >
-                    <div class="text-sm text-gray-700 mb-1">
-                        ${this.formatCurrency(status.spent)} / ${this.formatCurrency(status.limit)}
-                    </div>
-                    
-                    <!--Remaining(Psychological Hack) -->
-    <div class="text-lg font-bold ${status.remaining > 0 ? 'text-green-600' : 'text-red-600'}">
-        Remaining: ${this.formatCurrency(Math.max(status.remaining, 0))}
-    </div>
-                    
-                    ${ locked ? '<div class="text-xs text-red-600 font-bold mt-2">🔒 LOCKED - Bills not covered</div>' : '' }
-                </div >
-    `;
+            return '<div class="p-4 rounded-lg border-2 mb-4 ' + bgClass + '">' +
+                   '<div class="flex justify-between items-center mb-2">' +
+                   '<h3 class="font-bold capitaliz">' + category + '</h3>' +
+                   '<span class="text-sm font-bold ' + (status.percent >= 100 ? 'text-red-600' : 'text-gray-600') + '">' +
+                   Math.round(status.percent) + '%' +
+                   '</span>' +
+                   '</div>' +
+                   
+                   '<div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">' +
+                   '<div class="' + colorClass + ' h-2.5 rounded-full" style="width: ' + Math.min(status.percent, 100) + '%"></div>' +
+                   '</div>' +
+                   
+                   '<div class="text-sm text-gray-700 mb-1">' +
+                   this.formatCurrency(status.spent) + ' / ' + this.formatCurrency(status.limit) +
+                   '</div>' +
+                   
+                   '<div class="text-lg font-bold ' + (status.remaining > 0 ? 'text-green-600' : 'text-red-600') + '">' +
+                   'Remaining: ' + this.formatCurrency(Math.max(status.remaining, 0)) +
+                   '</div>' +
+                   
+                   (locked ? '<div class="text-xs text-red-600 font-bold mt-2">🔒 LOCKED - Bills not covered</div>' : '') +
+                   '</div>';
         }).join('');
     }
 
@@ -1201,11 +1190,11 @@ class FinanceTracker {
             statusEl.textContent = '🎉 Weekly target achieved! You\'re crushing it!';
             statusEl.className = 'text-sm text-green-600 font-medium mt-2';
         } else if (percent >= 70) {
-            statusEl.textContent = `💪 ${ Math.round(100 - percent) }% to go - almost there!`;
+            statusEl.textContent = '💪 ' + Math.round(100 - percent) + '% to go - almost there!';
             statusEl.className = 'text-sm text-purple-600 mt-2';
         } else {
             const remaining = weeklyTarget - weekNet;
-            statusEl.textContent = `${ this.formatCurrency(remaining) } more needed this week`;
+            statusEl.textContent = this.formatCurrency(remaining) + ' more needed this week';
             statusEl.className = 'text-sm text-gray-600 mt-2';
         }
     }
@@ -1217,7 +1206,7 @@ class FinanceTracker {
 
         document.getElementById('decision-icon').textContent = decision.icon;
         document.getElementById('decision-text').textContent = decision.status;
-        document.getElementById('decision-text').className = `text - 4xl font - bold ${ decision.color } `;
+        document.getElementById('decision-text').className = 'text-4xl font-bold ' + decision.color;
 
         const mainReason = decision.reasons.length > 0 ? decision.reasons[0] : 'All systems normal';
         document.getElementById('decision-reason').textContent = mainReason.replace(/^[^\s]+\s/, '');
@@ -1225,14 +1214,14 @@ class FinanceTracker {
         const detailsContainer = document.getElementById('decision-details');
         if (decision.reasons.length > 0) {
             detailsContainer.innerHTML = '<div class="font-medium mb-2">Analysis:</div>' +
-                decision.reasons.map(r => `< div class="py-1" >• ${ r }</div > `).join('');
+                decision.reasons.map(r => '<div class="py-1">• ' + r + '</div>').join('');
         } else {
             detailsContainer.innerHTML = '<div class="text-gray-500">No data yet - add some entries!</div>';
         }
 
         const indicator = document.getElementById('decision-indicator');
         if (indicator) {
-            indicator.className = `decision - card rounded - 2xl shadow - xl p - 8 text - center mb - 6 ${ decision.bgColor } `;
+            indicator.className = 'decision-card rounded-2xl shadow-xl p-8 text-center mb-6 ' + decision.bgColor;
         }
     }
 
@@ -1247,29 +1236,9 @@ class FinanceTracker {
             return;
         }
 
-        container.innerHTML = `
-    < div class="grid grid-cols-1 md:grid-cols-2 gap-4" >
-        <div class="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-            <div class="text-sm font-medium text-green-900 mb-2">🏆 Best Shift</div>
-            <div class="text-xl font-bold text-green-800">${intelligence.best.dayName} ${intelligence.best.shiftName}</div>
-            <div class="text-2xl font-bold text-green-600 mt-1">${this.formatCurrency(intelligence.best.avgRate)}/hr</div>
-            <div class="text-xs text-green-700 mt-1">Based on ${intelligence.best.count} shifts</div>
-        </div>
-                
-                ${
-    intelligence.worst ? `
-                <div class="bg-red-50 border-2 border-red-200 rounded-lg p-4">
-                    <div class="text-sm font-medium text-red-900 mb-2">⚠️ Worst Shift</div>
-                    <div class="text-xl font-bold text-red-800">${intelligence.worst.dayName} ${intelligence.worst.shiftName}</div>
-                    <div class="text-2xl font-bold text-red-600 mt-1">${this.formatCurrency(intelligence.worst.avgRate)}/hr</div>
-                    <div class="text-xs text-red-700 mt-1">Based on ${intelligence.worst.count} shifts - avoid this</div>
-                </div>
-                ` : ''
-}
             </div >
 
-    ${
-    intelligence.all.length > 2 ? `
+    ${intelligence.all.length > 2 ? `
             <div class="mt-4">
                 <div class="text-sm font-medium text-gray-700 mb-2">All Shifts (sorted by $/hr)</div>
                 <div class="space-y-1">
@@ -1282,228 +1251,218 @@ class FinanceTracker {
                 </div>
             </div>
             ` : ''
-}
+    }
 `;
     }
 
-    renderChart() {
-        const chartContainer = document.getElementById('weekly-chart');
-        const labelsContainer = document.getElementById('chart-labels');
+renderChart() {
+    const chartContainer = document.getElementById('weekly-chart');
+    const labelsContainer = document.getElementById('chart-labels');
 
-        if (!chartContainer || !labelsContainer) return;
+    if (!chartContainer || !labelsContainer) return;
 
-        const days = [];
-        for (let i = 6; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            days.push(date);
-        }
-
-        const dailyTotals = days.map(day => {
-            const dayStr = day.toISOString().split('T')[0];
-            return this.entries
-                .filter(e => e.date === dayStr)
-                .reduce((sum, e) => sum + e.net, 0);
-        });
-
-        const maxValue = Math.max(...dailyTotals, 1);
-
-        chartContainer.innerHTML = days.map((day, i) => {
-            const value = dailyTotals[i];
-            const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
-            const color = value > 0 ? 'bg-green-500' : 'bg-gray-300';
-
-            return `
-    < div class="flex-1 flex flex-col justify-end items-center" >
-                    <div class="text-xs font-medium text-gray-700 mb-1">
-                        ${value > 0 ? '$' + value.toFixed(0) : ''}
-                    </div>
-                    <div class="chart-bar w-full ${color} rounded-t" 
-                         style="height: ${Math.max(heightPercent, 2)}%"
-                         title="${this.formatCurrency(value)}">
-                    </div>
-                </div >
-    `;
-        }).join('');
-
-        labelsContainer.innerHTML = days.map(day => {
-            const dayName = day.toLocaleDateString('en-US', { weekday: 'short' });
-            return `< div class="flex-1 text-center" > ${ dayName }</div > `;
-        }).join('');
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        days.push(date);
     }
 
-    renderEntries() {
-        const tbody = document.getElementById('entries-table');
-        const noEntries = document.getElementById('no-entries');
+    const dailyTotals = days.map(day => {
+        const dayStr = day.toISOString().split('T')[0];
+        return this.entries
+            .filter(e => e.date === dayStr)
+            .reduce((sum, e) => sum + e.net, 0);
+    });
 
-        if (!tbody || !noEntries) return;
+    const maxValue = Math.max(...dailyTotals, 1);
 
-        if (this.entries.length === 0) {
-            tbody.innerHTML = '';
-            noEntries.classList.remove('hidden');
-            return;
-        }
+    chartContainer.innerHTML = days.map((day, i) => {
+        const value = dailyTotals[i];
+        const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
+        const color = value > 0 ? 'bg-green-500' : 'bg-gray-300';
+        const displayValue = value > 0 ? '$' + value.toFixed(0) : '';
 
-        noEntries.classList.add('hidden');
+        return '<div class="flex-1 flex flex-col justify-end items-center">' +
+            '<div class="text-xs font-medium text-gray-700 mb-1">' + displayValue + '</div>' +
+            '<div class="chart-bar w-full ' + color + ' rounded-t" ' +
+            'style="height: ' + Math.max(heightPercent, 2) + '%" ' +
+            'title="' + this.formatCurrency(value) + '"></div>' +
+            '</div>';
+    }).join('');
 
-        tbody.innerHTML = this.entries.slice(0, 20).map(entry => `
-    < tr class="hover:bg-gray-50 transition-colors" >
-                <td class="px-4 py-3 text-sm text-gray-800">
-                    ${new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-800">${entry.source}</td>
-                <td class="px-4 py-3 text-sm text-gray-800 text-right">${entry.hours.toFixed(1)}</td>
-                <td class="px-4 py-3 text-sm text-gray-800 text-right">${this.formatCurrency(entry.gross)}</td>
-                <td class="px-4 py-3 text-sm text-gray-800 text-right">${this.formatCurrency(entry.expenses)}</td>
-                <td class="px-4 py-3 text-sm font-medium text-right ${entry.net >= 0 ? 'text-green-600' : 'text-red-600'}">
-                    ${this.formatCurrency(entry.net)}
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-800 text-right">${this.formatCurrency(entry.hourly)}</td>
-                <td class="px-4 py-3 text-right">
-                    <button onclick="tracker.deleteEntry(${entry.id})" 
-                            class="text-red-500 hover:text-red-700 font-medium text-sm">
-                        Delete
-                    </button>
-                </td>
-            </tr >
-    `).join('');
+    labelsContainer.innerHTML = days.map(day => {
+        const dayName = day.toLocaleDateString('en-US', { weekday: 'short' });
+        return '<div class="flex-1 text-center">' + dayName + '</div>';
+    }).join('');
+}
+
+renderEntries() {
+    const tbody = document.getElementById('entries-table');
+    const noEntries = document.getElementById('no-entries');
+
+    if (!tbody || !noEntries) return;
+
+    if (this.entries.length === 0) {
+        tbody.innerHTML = '';
+        noEntries.classList.remove('hidden');
+        return;
     }
 
-    renderBillsList() {
-        const container = document.getElementById('bills-list');
-        if (!container) return;
+    noEntries.classList.add('hidden');
 
-        if (this.bills.length === 0) {
-            container.innerHTML = '<div class="text-gray-500 text-center py-4">No bills added yet</div>';
-            return;
-        }
+    tbody.innerHTML = this.entries.slice(0, 20).map(entry => {
+        const dateStr = new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const netColor = entry.net >= 0 ? 'text-green-600' : 'text-red-600';
 
-        container.innerHTML = this.bills.map(bill => `
-    < div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg" >
-                <div>
-                    <div class="font-medium">${bill.name}</div>
-                    <div class="text-sm text-gray-600">${bill.frequency} - Due: ${bill.dueDate}${bill.frequency === 'monthly' ? 'th' : ''}</div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="text-lg font-bold">${this.formatCurrency(bill.amount)}</div>
-                    <button onclick="tracker.deleteBill(${bill.id})" 
-                            class="text-red-500 hover:text-red-700 text-sm">
-                        Delete
-                    </button>
-                </div>
-            </div >
-    `).join('');
+        return '<tr class="hover:bg-gray-50 transition-colors">' +
+            '<td class="px-4 py-3 text-sm text-gray-800">' + dateStr + '</td>' +
+            '<td class="px-4 py-3 text-sm text-gray-800">' + entry.source + '</td>' +
+            '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + entry.hours.toFixed(1) + '</td>' +
+            '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + this.formatCurrency(entry.gross) + '</td>' +
+            '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + this.formatCurrency(entry.expenses) + '</td>' +
+            '<td class="px-4 py-3 text-sm font-medium text-right ' + netColor + '">' + this.formatCurrency(entry.net) + '</td>' +
+            '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + this.formatCurrency(entry.hourly) + '</td>' +
+            '<td class="px-4 py-3 text-right">' +
+            '<button onclick="tracker.deleteEntry(' + entry.id + ')" class="text-red-500 hover:text-red-700 font-medium text-sm">Delete</button>' +
+            '</td>' +
+            '</tr>';
+    }).join('');
+}
+
+renderBillsList() {
+    const container = document.getElementById('bills-list');
+    if (!container) return;
+
+    if (this.bills.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center py-4">No bills added yet</div>';
+        return;
     }
 
-    renderSpendingList() {
-        const container = document.getElementById('spending-list');
-        if (!container) return;
+    container.innerHTML = this.bills.map(bill => {
+        const suffix = bill.frequency === 'monthly' ? 'th' : '';
+        return '<div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">' +
+            '<div>' +
+            '<div class="font-medium">' + bill.name + '</div>' +
+            '<div class="text-sm text-gray-600">' + bill.frequency + ' - Due: ' + bill.dueDate + suffix + '</div>' +
+            '</div>' +
+            '<div class="flex items-center gap-3">' +
+            '<div class="text-lg font-bold">' + this.formatCurrency(bill.amount) + '</div>' +
+            '<button onclick="tracker.deleteBill(' + bill.id + ')" class="text-red-500 hover:text-red-700 text-sm">Delete</button>' +
+            '</div>' +
+            '</div>';
+    }).join('');
+}
 
-        if (this.spending.length === 0) {
-            container.innerHTML = '<div class="text-gray-500 text-center py-4">No spending logged yet</div>';
-            return;
-        }
+renderSpendingList() {
+    const container = document.getElementById('spending-list');
+    if (!container) return;
 
-        container.innerHTML = this.spending.slice(0, 10).map(s => `
-    < div class="flex justify-between items-center p-2 hover:bg-gray-50 rounded" >
-                <div class="flex-1">
-                    <div class="text-sm font-medium capitalize">${s.category}</div>
-                    <div class="text-xs text-gray-600">${new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                    ${s.note ? `<div class="text-xs text-gray-500">${s.note}</div>` : ''}
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="font-bold text-red-600">${this.formatCurrency(s.amount)}</div>
-                    <button onclick="tracker.deleteSpending(${s.id})" 
-                            class="text-red-500 hover:text-red-700 text-xs">
-                        ×
-                    </button>
-                </div>
-            </div >
-    `).join('');
+    if (this.spending.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center py-4">No spending logged yet</div>';
+        return;
     }
 
-    // ============================================
-    // SETTINGS
-    // ============================================
+    container.innerHTML = this.spending.slice(0, 10).map(s => {
+        const dateStr = new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const noteHtml = s.note ? '<div class="text-xs text-gray-500">' + s.note + '</div>' : '';
 
-    populateSettings() {
-        // Helper function to safely set value
-        const setVal = (id, value) => {
-            const el = document.getElementById(id);
-            if (el) el.value = value;
-        };
+        return '<div class="flex justify-between items-center p-2 hover:bg-gray-50 rounded">' +
+            '<div class="flex-1">' +
+            '<div class="text-sm font-medium capitalize">' + s.category + '</div>' +
+            '<div class="text-xs text-gray-600">' + dateStr + '</div>' +
+            noteHtml +
+            '</div>' +
+            '<div class="flex items-center gap-2">' +
+            '<div class="font-bold text-red-600">' + this.formatCurrency(s.amount) + '</div>' +
+            '<button onclick="tracker.deleteSpending(' + s.id + ')" class="text-red-500 hover:text-red-700 text-xs">×</button>' +
+            '</div>' +
+            '</div>';
+    }).join('');
+}
 
-        setVal('weekly-target', this.settings.weeklyTarget);
-        setVal('monthly-target', this.settings.monthlyTarget);
-        setVal('target-hourly', this.settings.targetHourly);
-        setVal('min-runway', this.settings.minRunway);
-        setVal('daily-expenses', this.settings.dailyExpenses);
-        setVal('starting-balance', this.settings.startingBalance);
+// ============================================
+// SETTINGS
+// ============================================
 
-        // Budgets
-        setVal('budget-food', this.settings.budgets.food);
-        setVal('budget-gas', this.settings.budgets.gas);
-        setVal('budget-fun', this.settings.budgets.fun);
-        setVal('budget-misc', this.settings.budgets.misc);
-    }
+populateSettings() {
+    // Helper function to safely set value
+    const setVal = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value;
+    };
 
-    updateSettings() {
-        this.settings.weeklyTarget = parseFloat(document.getElementById('weekly-target').value);
-        this.settings.monthlyTarget = parseFloat(document.getElementById('monthly-target').value);
-        this.settings.targetHourly = parseFloat(document.getElementById('target-hourly').value);
-        this.settings.minRunway = parseInt(document.getElementById('min-runway').value);
-        this.settings.dailyExpenses = parseFloat(document.getElementById('daily-expenses').value);
-        this.settings.startingBalance = parseFloat(document.getElementById('starting-balance').value);
+    setVal('weekly-target', this.settings.weeklyTarget);
+    setVal('monthly-target', this.settings.monthlyTarget);
+    setVal('target-hourly', this.settings.targetHourly);
+    setVal('min-runway', this.settings.minRunway);
+    setVal('daily-expenses', this.settings.dailyExpenses);
+    setVal('starting-balance', this.settings.startingBalance);
 
-        this.settings.budgets.food = parseFloat(document.getElementById('budget-food').value);
-        this.settings.budgets.gas = parseFloat(document.getElementById('budget-gas').value);
-        this.settings.budgets.fun = parseFloat(document.getElementById('budget-fun').value);
-        this.settings.budgets.misc = parseFloat(document.getElementById('budget-misc').value);
+    // Budgets
+    setVal('budget-food', this.settings.budgets.food);
+    setVal('budget-gas', this.settings.budgets.gas);
+    setVal('budget-fun', this.settings.budgets.fun);
+    setVal('budget-misc', this.settings.budgets.misc);
+}
 
-        this.saveSettings();
-        this.render();
-        this.showNotification('Settings saved! ⚙️');
-    }
+updateSettings() {
+    this.settings.weeklyTarget = parseFloat(document.getElementById('weekly-target').value);
+    this.settings.monthlyTarget = parseFloat(document.getElementById('monthly-target').value);
+    this.settings.targetHourly = parseFloat(document.getElementById('target-hourly').value);
+    this.settings.minRunway = parseInt(document.getElementById('min-runway').value);
+    this.settings.dailyExpenses = parseFloat(document.getElementById('daily-expenses').value);
+    this.settings.startingBalance = parseFloat(document.getElementById('starting-balance').value);
 
-    clearAllData() {
-        localStorage.removeItem('financeEntries');
-        localStorage.removeItem('financeBills');
-        localStorage.removeItem('financeSpending');
-        localStorage.removeItem('financeSettings');
-        this.entries = [];
-        this.bills = [];
-        this.spending = [];
-        this.settings = this.loadSettings();
-        this.populateSettings();
-        this.render();
-        this.showNotification('All data cleared');
-    }
+    this.settings.budgets.food = parseFloat(document.getElementById('budget-food').value);
+    this.settings.budgets.gas = parseFloat(document.getElementById('budget-gas').value);
+    this.settings.budgets.fun = parseFloat(document.getElementById('budget-fun').value);
+    this.settings.budgets.misc = parseFloat(document.getElementById('budget-misc').value);
 
-    // ============================================
-    // UTILITIES
-    // ============================================
+    this.saveSettings();
+    this.render();
+    this.showNotification('Settings saved! ⚙️');
+}
 
-    formatCurrency(value) {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(value);
-    }
+clearAllData() {
+    localStorage.removeItem('financeEntries');
+    localStorage.removeItem('financeBills');
+    localStorage.removeItem('financeSpending');
+    localStorage.removeItem('financeSettings');
+    this.entries = [];
+    this.bills = [];
+    this.spending = [];
+    this.settings = this.loadSettings();
+    this.populateSettings();
+    this.render();
+    this.showNotification('All data cleared');
+}
 
-    showNotification(message) {
-        const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-        notification.textContent = message;
-        document.body.appendChild(notification);
+// ============================================
+// UTILITIES
+// ============================================
 
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transition = 'opacity 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }, 2000);
-    }
+formatCurrency(value) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(value);
+}
+
+showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 2000);
+}
 }
 
 // ============================================
