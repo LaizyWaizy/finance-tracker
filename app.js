@@ -476,7 +476,7 @@ class FinanceTracker {
         this.spending.unshift(spending);
         this.saveSpending();
         this.render();
-        this.showNotification(`💸 ${ note } - ${ this.formatCurrency(amount) } `);
+        this.showNotification('💸 ' + note + ' - ' + this.formatCurrency(amount));
     }
 
     // ============================================
